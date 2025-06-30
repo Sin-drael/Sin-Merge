@@ -82,6 +82,10 @@
                     <button id="downloadAllButton" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg transition-colors duration-200 hidden">
                         Télécharger tout (Zip)
                     </button>
+                    <div id="loadingBarContainer" class="hidden mt-4 w-full bg-gray-200 rounded-full h-4">
+                        <div id="loadingBar" class="bg-blue-500 h-4 rounded-full w-0 transition-all duration-500 ease-out"></div>
+                    </div>
+                    <p id="zipLoadingMessage" class="hidden mt-2 text-blue-600 text-sm">Génération du fichier ZIP en cours...</p>
                 </div>
             </div>
         </div>
