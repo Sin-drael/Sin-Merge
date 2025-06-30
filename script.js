@@ -14,15 +14,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const backgroundsPreview = document.getElementById('backgroundsPreview');
     const statusMessage = document.getElementById('statusMessage');
     const downloadLinks = document.getElementById('downloadLinks');
+    const downloadAllButton = document.getElementById('downloadAllButton');
 
-    // NOUVEAU : Référence au bouton de téléchargement ZIP
-    const downloadAllButton = document.getElementById('downloadAllButton'); // <-- AJOUTÉ
+    // NOUVEAU : Références aux éléments de la barre de chargement
+    const loadingBarContainer = document.getElementById('loadingBarContainer'); // <-- AJOUTÉ
+    const loadingBar = document.getElementById('loadingBar'); // <-- AJOUTÉ
+    const zipLoadingMessage = document.getElementById('zipLoadingMessage'); // <-- AJOUTÉ
 
     let overlayImage = null;
     let backgroundImageFiles = [];
-
-    // NOUVEAU : Tableau pour stocker les blobs des images fusionnées pour le ZIP
-    let mergedImageBlobs = []; // <-- AJOUTÉ
+    let mergedImageBlobs = [];
 
     // Fonction pour mettre à jour l'état du bouton de fusion
     const updateMergeButtonState = () => {
@@ -35,21 +36,21 @@ document.addEventListener('DOMContentLoaded', () => {
             mergeButton.classList.remove('bg-green-600', 'hover:bg-green-700');
             mergeButton.classList.add('bg-green-400', 'cursor-not-allowed');
         }
-        // Cache le bouton "Télécharger tout" si aucune image n'est prête à être fusionnée
-        downloadAllButton.classList.add('hidden'); // <-- AJOUTÉ
+        downloadAllButton.classList.add('hidden');
+        // NOUVEAU : Cacher la barre de chargement et son message si les conditions de fusion changent
+        loadingBarContainer.classList.add('hidden'); // <-- AJOUTÉ
+        zipLoadingMessage.classList.add('hidden'); // <-- AJOUTÉ
+        loadingBar.style.width = '0%'; // Réinitialise la largeur de la barre <-- AJOUTÉ
     };
 
-    // Gérer le clic sur le bouton personnalisé "Choisir un fichier..." pour le calque
     selectOverlayButton.addEventListener('click', () => {
         overlayInput.click();
     });
 
-    // Lire le fichier du calque et mettre à jour son affichage
     overlayInput.addEventListener('change', (event) => {
         const file = event.target.files[0];
         if (file && file.type === 'image/png') {
             overlayFileName.textContent = file.name;
-
             const reader = new FileReader();
             reader.onload = (e) => {
                 const img = new Image();
@@ -71,29 +72,22 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Gérer le clic sur le bouton personnalisé pour les images de fond
     selectBackgroundsButton.addEventListener('click', () => {
         backgroundsInput.click();
     });
 
-    // Lecture des fichiers de fond (backgrounds) et mise à jour de leur affichage
     backgroundsInput.addEventListener('change', (event) => {
         const newFiles = Array.from(event.target.files).filter(file => file.type.startsWith('image/'));
-
         const uniqueFiles = new Map();
-
         backgroundImageFiles.forEach(file => {
             uniqueFiles.set(`${file.name}-${file.size}-${file.lastModified}`, file);
         });
-
         newFiles.forEach(file => {
             uniqueFiles.set(`${file.name}-${file.size}-${file.lastModified}`, file);
         });
-
         backgroundImageFiles = Array.from(uniqueFiles.values());
 
         backgroundsPreview.innerHTML = '';
-
         if (backgroundImageFiles.length > 0) {
             if (backgroundImageFiles.length === 1) {
                 backgroundsFileNames.textContent = backgroundImageFiles[0].name;
@@ -116,11 +110,9 @@ document.addEventListener('DOMContentLoaded', () => {
             backgroundsPreview.innerHTML = '<span class="text-gray-400">Aperçu des fonds</span>';
         }
         updateMergeButtonState();
-
         event.target.value = '';
     });
 
-    // Fonction de fusion
     mergeButton.addEventListener('click', async () => {
         if (!overlayImage || backgroundImageFiles.length === 0) {
             statusMessage.textContent = "Veuillez sélectionner un calque et au moins une image de fond.";
@@ -132,7 +124,10 @@ document.addEventListener('DOMContentLoaded', () => {
         statusMessage.classList.remove('text-red-500', 'text-green-600');
         statusMessage.classList.add('text-blue-600');
         downloadLinks.innerHTML = '';
-        mergedImageBlobs = []; // <-- TRÈS IMPORTANT : Réinitialise le tableau de blobs avant chaque fusion
+        mergedImageBlobs = [];
+        downloadAllButton.classList.add('hidden'); // Assurez-vous qu'il est caché au début de la fusion
+        loadingBarContainer.classList.add('hidden'); // <-- AJOUTÉ : Cacher la barre avant la fusion principale
+        zipLoadingMessage.classList.add('hidden'); // <-- AJOUTÉ : Cacher le message de la barre
 
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
@@ -174,8 +169,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     ctx.drawImage(overlayImage, 0, 0, canvas.width, canvas.height);
 
                     canvas.toBlob((blob) => {
-                        // NOUVEAU : Ajoute le blob et le nom du fichier au tableau
-                        mergedImageBlobs.push({ blob: blob, name: `${file.name.substring(0, file.name.lastIndexOf('.')) || file.name}-sinmerge.png` }); // <-- AJOUTÉ
+                        mergedImageBlobs.push({ blob: blob, name: `${file.name.substring(0, file.name.lastIndexOf('.')) || file.name}-sinmerge.png` });
 
                         const url = URL.createObjectURL(blob);
                         const downloadLink = document.createElement('a');
@@ -184,7 +178,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         const originalFileName = file.name;
                         const lastDotIndex = originalFileName.lastIndexOf('.');
                         let baseName;
-                        // let extension; // Pas besoin de l'extension ici car on force .png
 
                         if (lastDotIndex > 0) {
                             baseName = originalFileName.substring(0, lastDotIndex);
@@ -200,55 +193,58 @@ document.addEventListener('DOMContentLoaded', () => {
                     }, 'image/png');
                 };
             });
-            URL.revokeObjectURL(img.src); // Libère la mémoire
+            URL.revokeObjectURL(img.src);
         }
 
         statusMessage.textContent = "Fusion terminée !";
         statusMessage.classList.remove('text-blue-600', 'text-red-500');
         statusMessage.classList.add('text-green-600');
 
-        // NOUVEAU : Affiche le bouton "Télécharger tout (Zip)"
         if (mergedImageBlobs.length > 0) {
-            downloadAllButton.classList.remove('hidden'); // <-- AJOUTÉ
+            downloadAllButton.classList.remove('hidden');
         }
     });
 
-    // NOUVEAU : Gérer le clic sur le bouton "Télécharger tout (Zip)"
-    downloadAllButton.addEventListener('click', async () => { // <-- AJOUTÉ
+    // Gérer le clic sur le bouton "Télécharger tout (Zip)"
+    downloadAllButton.addEventListener('click', async () => {
         if (mergedImageBlobs.length === 0) {
             statusMessage.textContent = "Aucune image fusionnée à télécharger.";
             statusMessage.classList.add('text-red-500');
             return;
         }
 
-        statusMessage.textContent = "Préparation du fichier ZIP...";
+        statusMessage.textContent = "Préparation du fichier ZIP..."; // Message initial
         statusMessage.classList.remove('text-red-500', 'text-green-600');
         statusMessage.classList.add('text-blue-600');
 
-        const zip = new JSZip(); // Crée une nouvelle instance de JSZip
+        // NOUVEAU : Afficher la barre de chargement et le message
+        loadingBarContainer.classList.remove('hidden'); // <-- AJOUTÉ
+        zipLoadingMessage.classList.remove('hidden'); // <-- AJOUTÉ
+        loadingBar.style.width = '0%'; // Assurez-vous qu'elle commence à 0% <-- AJOUTÉ
+
+        const zip = new JSZip();
 
         for (const item of mergedImageBlobs) {
-            // Ajoute chaque blob (image fusionnée) au fichier ZIP
             zip.file(item.name, item.blob);
         }
 
-        // Génère le fichier ZIP
         try {
-            const content = await zip.generateAsync({ type: "blob" });
-            const zipFileName = `images_fusionnees_${Date.now()}.zip`; // Nom unique pour le ZIP
+            // Utiliser la fonction onUpdate pour la barre de chargement
+            const content = await zip.generateAsync({ type: "blob" }, function updateCallback(metadata) { // <-- MODIFIÉ pour inclure updateCallback
+                const percent = metadata.percent.toFixed(2); // Pourcentage avec 2 décimales
+                loadingBar.style.width = `${percent}%`; // Met à jour la largeur de la barre
+                zipLoadingMessage.textContent = `Génération du fichier ZIP : ${percent}%`; // Met à jour le message
+            });
 
-            // Crée un lien de téléchargement temporaire (non ajouté au DOM)
+            const zipFileName = `images_fusionnees_${Date.now()}.zip`;
+
             const tempDownloadLink = document.createElement('a');
             tempDownloadLink.href = URL.createObjectURL(content);
-            tempDownloadLink.download = zipFileName; // Nom du fichier ZIP
-
-            // Simule un clic sur le lien pour déclencher le téléchargement
+            tempDownloadLink.download = zipFileName;
             tempDownloadLink.click();
-
-            // Libère la mémoire en révoquant l'URL de l'objet Blob après le téléchargement
             URL.revokeObjectURL(tempDownloadLink.href);
 
-            statusMessage.textContent = "Fichier ZIP téléchargé !"; // Nouveau message de statut
+            statusMessage.textContent = "Fichier ZIP téléchargé !";
             statusMessage.classList.remove('text-blue-600');
             statusMessage.classList.add('text-green-600');
 
@@ -257,10 +253,13 @@ document.addEventListener('DOMContentLoaded', () => {
             statusMessage.textContent = "Erreur lors de la création du fichier ZIP.";
             statusMessage.classList.remove('text-blue-600');
             statusMessage.classList.add('text-red-500');
+        } finally {
+            // NOUVEAU : Cacher la barre de chargement et le message quoi qu'il arrive
+            loadingBarContainer.classList.add('hidden'); // <-- AJOUTÉ
+            zipLoadingMessage.classList.add('hidden'); // <-- AJOUTÉ
+            loadingBar.style.width = '0%'; // Réinitialise la barre pour la prochaine fois <-- AJOUTÉ
         }
     });
 
-
-    // Initialiser l'état du bouton au chargement de la page
     updateMergeButtonState();
 });
