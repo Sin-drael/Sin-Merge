@@ -586,7 +586,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            const partFileName = `manhwa_fusionne_partie_${String(partNumber).padStart(2, '0')}.png`;
+            const partFileName = `${String(partNumber).padStart(2, '0')}.png`;
             mergedManhwaBlobs.push({ blob: blob, name: partFileName });
 
             currentImageIndex += MAX_IMAGES_PER_CHUNK;
