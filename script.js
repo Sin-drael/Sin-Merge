@@ -309,6 +309,69 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // --- NOUVEAU : Initialisation des écouteurs d'événements pour la section Manhwa ---
+
+    selectManhwaImagesButton.addEventListener('click', () => {
+        manhwaImagesInput.click();
+    });
+
+    manhwaImagesInput.addEventListener('change', (event) => {
+        const newFiles = Array.from(event.target.files).filter(file => file.type.startsWith('image/'));
+        const uniqueFiles = new Map();
+        manhwaImageFiles.forEach(file => {
+            uniqueFiles.set(`${file.name}-${file.size}-${file.lastModified}`, file);
+        });
+        newFiles.forEach(file => {
+            uniqueFiles.set(`${file.name}-${file.size}-${file.lastModified}`, file);
+        });
+        manhwaImageFiles = Array.from(uniqueFiles.values());
+
+        manhwaImagesPreview.innerHTML = '';
+        if (manhwaImageFiles.length > 0) {
+            if (manhwaImageFiles.length === 1) {
+                manhwaImagesFileNames.textContent = manhwaImageFiles[0].name;
+            } else {
+                manhwaImagesFileNames.textContent = `${manhwaImageFiles.length} fichiers sélectionnés.`;
+            }
+
+            manhwaImageFiles.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.classList.add('w-24', 'h-24', 'object-cover', 'rounded-md', 'shadow-sm');
+                    manhwaImagesPreview.appendChild(img);
+                };
+                reader.readAsDataURL(file);
+            });
+        } else {
+            manhwaImagesFileNames.textContent = 'Aucun fichier sélectionné.';
+            manhwaImagesPreview.innerHTML = '<span class="text-gray-400">Aperçu des images</span>';
+        }
+        updateManhwaMergeButtonState(); // Cette fonction sera ajoutée à l'étape suivante
+        event.target.value = ''; // Réinitialise l'input pour pouvoir sélectionner les mêmes fichiers à nouveau
+    });
+
+    orientationHorizontalButton.addEventListener('click', () => {
+        mergeOrientation = 'horizontal';
+        orientationHorizontalButton.classList.remove('border-gray-300', 'text-gray-700', 'hover:bg-gray-100');
+        orientationHorizontalButton.classList.add('border-blue-500', 'text-blue-500', 'hover:bg-blue-50');
+        orientationVerticalButton.classList.remove('border-blue-500', 'text-blue-500', 'hover:bg-blue-50');
+        orientationVerticalButton.classList.add('border-gray-300', 'text-gray-700', 'hover:bg-gray-100');
+        updateManhwaMergeButtonState();
+    });
+
+    orientationVerticalButton.addEventListener('click', () => {
+        mergeOrientation = 'vertical';
+        orientationVerticalButton.classList.remove('border-gray-300', 'text-gray-700', 'hover:bg-gray-100');
+        orientationVerticalButton.classList.add('border-blue-500', 'text-blue-500', 'hover:bg-blue-50');
+        orientationHorizontalButton.classList.remove('border-blue-500', 'text-blue-500', 'hover:bg-blue-50');
+        orientationHorizontalButton.classList.add('border-gray-300', 'text-gray-700', 'hover:bg-gray-100');
+        updateManhwaMergeButtonState();
+    });
+
+    // Remarque : la fonction `mergeManhwaImages` sera ajoutée dans une étape ultérieure
+    mergeManhwaButton.addEventListener('click', mergeManhwaImages);
     // Gérer le clic sur le bouton "Télécharger tout (Zip)"
     downloadAllButton.addEventListener('click', async () => {
         if (mergedImageBlobs.length === 0) {
