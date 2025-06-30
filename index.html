@@ -76,15 +76,24 @@
                 </button>
                 <div id="statusMessage" class="mt-4 text-gray-600"></div>
                 <div id="downloadLinks" class="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
-            </div>
-        </main>
 
-        <footer class="bg-gray-800 text-white p-4 mt-8 text-center">
-            <div class="container mx-auto">
-                <p>&copy; 2025 Mon Super Site. Tous droits réservés.</p>
-            </div>
-        </footer>
+                <div class="text-center mt-6">
+                    <button id="downloadAllButton" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg transition-colors duration-200 hidden">
+                        Télécharger tout (Zip)
+                    </button>
+                </div>
 
-        <script src="script.js"></script>
-    </body>
-    </html>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-gray-800 text-white p-4 mt-8 text-center">
+        <div class="container mx-auto">
+            <p>&copy; 2025 Mon Super Site. Tous droits réservés.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
