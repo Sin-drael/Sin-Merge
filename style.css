@@ -7,20 +7,23 @@ header {
 /* Règles pour le groupe de logos dans l'en-tête */
 /* ... (le reste de votre CSS existant pour les logos) ... */
 .site-logo {
-    height: 50px; /* Taille par défaut pour les logos */
-    object-fit: contain; /* Garde les proportions de l'image */
+    height: auto;
+    display: block;
+    filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.4));
 }
 
+/* Styles spécifiques pour les logos de dragon */
 .dragon-logo {
-    height: 60px; /* Les dragons sont légèrement plus grands */
+    max-width: 70px;
 }
 
 .right-dragon {
     transform: scaleX(-1); /* Retourne l'image horizontalement */
 }
 
+/* Styles spécifiques pour le logo du titre central */
 .main-title-logo {
-    height: 80px; /* Le titre principal est plus grand */
+    max-width: 250px;
 }
 
 /* Media query pour le responsive, comme dans votre ancien CSS */
