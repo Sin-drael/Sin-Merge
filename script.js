@@ -215,9 +215,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     // Calculez les dimensions de dessin de l'image de fond par rapport aux dimensions du canvas actuel
                     const bgAspectRatio = imgOriginalWidth / imgOriginalHeight;
-                    const canvasAspectRatio = canvas.width / canvas.height;
+                    // canvasAspectRatio est calculé ici pour cette itération du canvas
+                    const currentCanvasAspectRatio = canvas.width / canvas.height; // CORRECTION: Définition locale ici
 
-                    if (bgAspectRatio > canvasAspectRatio) { // L'image est plus large que le canvas
+                    if (bgAspectRatio > currentCanvasAspectRatio) { // L'image est plus large que le canvas
                         bgDrawWidth = canvas.width;
                         bgDrawHeight = canvas.width / bgAspectRatio;
                         bgOffsetY = (canvas.height - bgDrawHeight) / 2;
@@ -239,8 +240,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     const olOriginalHeight = overlayImage.naturalHeight;
 
                     const olAspectRatio = olOriginalWidth / olOriginalHeight;
-                    // Note: currentCanvasAspectRatio est déjà calculé et correct pour le canvas après potentielle rotation
-                    if (olAspectRatio > currentCanvasAspectRatio) {
+                    // Note: currentCanvasAspectRatio est maintenant défini ci-dessus et est correct pour le canvas après potentielle rotation
+                    if (olAspectRatio > currentCanvasAspectRatio) { // Utilisation de la variable localement définie
                         olDrawWidth = canvas.width;
                         olDrawHeight = canvas.width / olAspectRatio;
                         olOffsetY = (canvas.height - olDrawHeight) / 2;
@@ -282,7 +283,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }, 'image/png');
                 };
             });
-            URL.revokeObjectURL(img.src);
+            URL.revokeObjectURL(img.src); // Important de révoquer après que l'image est chargée sur le canvas
         }
 
         statusMessage.textContent = "Fusion terminée !";
