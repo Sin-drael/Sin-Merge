@@ -93,6 +93,22 @@ document.addEventListener('DOMContentLoaded', () => {
         loadingBar.style.width = '0%'; // Réinitialise la largeur de la barre
     };
 
+    // --- NOUVEAU : Fonction pour mettre à jour l'état du bouton de fusion Manhwa ---
+    const updateManhwaMergeButtonState = () => {
+        // Le bouton est activé s'il y a au moins 1 image et qu'une orientation est sélectionnée
+        if (manhwaImageFiles.length > 0 && mergeOrientation) {
+            mergeManhwaButton.disabled = false;
+            mergeManhwaButton.classList.remove('bg-green-400', 'cursor-not-allowed');
+            mergeManhwaButton.classList.add('bg-green-600', 'hover:bg-green-700');
+        } else {
+            mergeManhwaButton.disabled = true;
+            mergeManhwaButton.classList.remove('bg-green-600', 'hover:bg-green-700');
+            mergeManhwaButton.classList.add('bg-green-400', 'cursor-not-allowed');
+        }
+        manhwaDownloadLinkContainer.innerHTML = ''; // Cache le lien de téléchargement précédent
+        manhwaStatusMessage.textContent = ''; // Efface le message de statut
+    };
+
     selectOverlayButton.addEventListener('click', () => {
         overlayInput.click();
     });
