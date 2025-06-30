@@ -17,9 +17,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const downloadAllButton = document.getElementById('downloadAllButton');
 
     // NOUVEAU : Références aux éléments de la barre de chargement
-    const loadingBarContainer = document.getElementById('loadingBarContainer'); // <-- AJOUTÉ
-    const loadingBar = document.getElementById('loadingBar'); // <-- AJOUTÉ
-    const zipLoadingMessage = document.getElementById('zipLoadingMessage'); // <-- AJOUTÉ
+    const loadingBarContainer = document.getElementById('loadingBarContainer');
+    const loadingBar = document.getElementById('loadingBar');
+    const zipLoadingMessage = document.getElementById('zipLoadingMessage');
 
     let overlayImage = null;
     let backgroundImageFiles = [];
@@ -38,9 +38,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         downloadAllButton.classList.add('hidden');
         // NOUVEAU : Cacher la barre de chargement et son message si les conditions de fusion changent
-        loadingBarContainer.classList.add('hidden'); // <-- AJOUTÉ
-        zipLoadingMessage.classList.add('hidden'); // <-- AJOUTÉ
-        loadingBar.style.width = '0%'; // Réinitialise la largeur de la barre <-- AJOUTÉ
+        loadingBarContainer.classList.add('hidden');
+        zipLoadingMessage.classList.add('hidden');
+        loadingBar.style.width = '0%'; // Réinitialise la largeur de la barre
     };
 
     selectOverlayButton.addEventListener('click', () => {
@@ -126,8 +126,8 @@ document.addEventListener('DOMContentLoaded', () => {
         downloadLinks.innerHTML = '';
         mergedImageBlobs = [];
         downloadAllButton.classList.add('hidden'); // Assurez-vous qu'il est caché au début de la fusion
-        loadingBarContainer.classList.add('hidden'); // <-- AJOUTÉ : Cacher la barre avant la fusion principale
-        zipLoadingMessage.classList.add('hidden'); // <-- AJOUTÉ : Cacher le message de la barre
+        loadingBarContainer.classList.add('hidden'); // Cacher la barre avant la fusion principale
+        zipLoadingMessage.classList.add('hidden'); // Cacher le message de la barre
 
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
@@ -147,23 +147,31 @@ document.addEventListener('DOMContentLoaded', () => {
                     ctx.fillStyle = '#FFFFFF';
                     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-                    const imageAspectRatio = img.naturalWidth / img.naturalHeight;
-                    const canvasAspectRatio = canvas.width / canvas.height;
-
+                    // NOUVELLE LOGIQUE DE REDIMENSIONNEMENT ICI
                     let drawWidth;
                     let drawHeight;
                     let offsetX = 0;
                     let offsetY = 0;
 
-                    if (imageAspectRatio > canvasAspectRatio) {
-                        drawWidth = canvas.width;
-                        drawHeight = canvas.width / imageAspectRatio;
-                        offsetY = (canvas.height - drawHeight) / 2;
-                    } else {
+                    const imgOriginalWidth = img.naturalWidth;
+                    const imgOriginalHeight = img.naturalHeight;
+
+                    // Déterminez si l'image est en format portrait ou paysage
+                    if (imgOriginalHeight > imgOriginalWidth) { // Format Portrait (hauteur > largeur)
+                        // Redimensionner sur la hauteur (canvas.height) en conservant les proportions
                         drawHeight = canvas.height;
-                        drawWidth = canvas.height * imageAspectRatio;
-                        offsetX = (canvas.width - drawWidth) / 2;
+                        drawWidth = (imgOriginalWidth / imgOriginalHeight) * drawHeight;
+                    } else { // Format Paysage (largeur >= hauteur)
+                        // Redimensionner sur la largeur (canvas.width) en conservant les proportions
+                        drawWidth = canvas.width;
+                        drawHeight = (imgOriginalHeight / imgOriginalWidth) * drawWidth;
                     }
+
+                    // Centrer l'image si elle n'occupe pas tout le canvas après redimensionnement
+                    offsetX = (canvas.width - drawWidth) / 2;
+                    offsetY = (canvas.height - drawHeight) / 2;
+
+                    // FIN DE LA NOUVELLE LOGIQUE
 
                     ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
                     ctx.drawImage(overlayImage, 0, 0, canvas.width, canvas.height);
@@ -218,9 +226,9 @@ document.addEventListener('DOMContentLoaded', () => {
         statusMessage.classList.add('text-blue-600');
 
         // NOUVEAU : Afficher la barre de chargement et le message
-        loadingBarContainer.classList.remove('hidden'); // <-- AJOUTÉ
-        zipLoadingMessage.classList.remove('hidden'); // <-- AJOUTÉ
-        loadingBar.style.width = '0%'; // Assurez-vous qu'elle commence à 0% <-- AJOUTÉ
+        loadingBarContainer.classList.remove('hidden');
+        zipLoadingMessage.classList.remove('hidden');
+        loadingBar.style.width = '0%'; // Assurez-vous qu'elle commence à 0%
 
         const zip = new JSZip();
 
@@ -230,7 +238,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             // Utiliser la fonction onUpdate pour la barre de chargement
-            const content = await zip.generateAsync({ type: "blob" }, function updateCallback(metadata) { // <-- MODIFIÉ pour inclure updateCallback
+            const content = await zip.generateAsync({ type: "blob" }, function updateCallback(metadata) {
                 const percent = metadata.percent.toFixed(2); // Pourcentage avec 2 décimales
                 loadingBar.style.width = `${percent}%`; // Met à jour la largeur de la barre
                 zipLoadingMessage.textContent = `Génération du fichier ZIP : ${percent}%`; // Met à jour le message
@@ -255,9 +263,9 @@ document.addEventListener('DOMContentLoaded', () => {
             statusMessage.classList.add('text-red-500');
         } finally {
             // NOUVEAU : Cacher la barre de chargement et le message quoi qu'il arrive
-            loadingBarContainer.classList.add('hidden'); // <-- AJOUTÉ
-            zipLoadingMessage.classList.add('hidden'); // <-- AJOUTÉ
-            loadingBar.style.width = '0%'; // Réinitialise la barre pour la prochaine fois <-- AJOUTÉ
+            loadingBarContainer.classList.add('hidden');
+            zipLoadingMessage.classList.add('hidden');
+            loadingBar.style.width = '0%'; // Réinitialise la barre pour la prochaine fois
         }
     });
 
