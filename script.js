@@ -449,6 +449,108 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+// --- NOUVEAU : Fonction de fusion des images Manhwa ---
+    async function mergeManhwaImages() {
+        if (manhwaImageFiles.length === 0) {
+            manhwaStatusMessage.textContent = "Veuillez sélectionner au moins une image.";
+            manhwaStatusMessage.classList.add('text-red-500');
+            return;
+        }
+
+        manhwaStatusMessage.textContent = "Fusion en cours...";
+        manhwaStatusMessage.classList.remove('text-red-500', 'text-green-600');
+        manhwaStatusMessage.classList.add('text-blue-600');
+        manhwaDownloadLinkContainer.innerHTML = ''; // Efface tout lien de téléchargement précédent
+
+        const imagesToLoad = manhwaImageFiles.map(file => {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.onload = () => resolve(img);
+                img.onerror = () => {
+                    console.error("Erreur de chargement de l'image:", file.name);
+                    resolve(null); // Résoudre avec null en cas d'erreur
+                };
+                img.src = URL.createObjectURL(file);
+            });
+        });
+
+        const loadedImages = await Promise.all(imagesToLoad);
+        // Filtrer les images qui ont échoué au chargement
+        const validImages = loadedImages.filter(img => img instanceof Image && img.naturalWidth > 0 && img.naturalHeight > 0);
+
+        if (validImages.length === 0) {
+            manhwaStatusMessage.textContent = "Aucune image valide n'a pu être chargée pour la fusion.";
+            manhwaStatusMessage.classList.add('text-red-500');
+            return;
+        }
+
+        let totalWidth = 0;
+        let totalHeight = 0;
+
+        // Calculer les dimensions du canvas final
+        if (mergeOrientation === 'vertical') {
+            totalWidth = Math.max(...validImages.map(img => img.naturalWidth)); // La largeur est la plus grande largeur parmi toutes les images
+            totalHeight = validImages.reduce((sum, img) => sum + img.naturalHeight, 0); // La hauteur est la somme des hauteurs
+        } else { // horizontal
+            totalWidth = validImages.reduce((sum, img) => sum + img.naturalWidth, 0); // La largeur est la somme des largeurs
+            totalHeight = Math.max(...validImages.map(img => img.naturalHeight)); // La hauteur est la plus grande hauteur parmi toutes les images
+        }
+
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = totalWidth;
+        canvas.height = totalHeight;
+
+        ctx.fillStyle = '#FFFFFF'; // Définir un fond blanc par défaut
+        ctx.fillRect(0, 0, canvas.width, canvas.height); // Remplir le fond
+
+        let currentX = 0;
+        let currentY = 0;
+
+        // Dessiner les images sur le canvas
+        validImages.forEach(img => {
+            if (mergeOrientation === 'vertical') {
+                // Centrer horizontalement si les images ont des largeurs différentes
+                const offsetX = (totalWidth - img.naturalWidth) / 2;
+                ctx.drawImage(img, offsetX, currentY);
+                currentY += img.naturalHeight;
+            } else { // horizontal
+                // Centrer verticalement si les images ont des hauteurs différentes
+                const offsetY = (totalHeight - img.naturalHeight) / 2;
+                ctx.drawImage(img, currentX, offsetY);
+                currentX += img.naturalWidth;
+            }
+            // Important : Libérer l'URL de l'objet Blob après que l'image est dessinée sur le canvas
+            // car l'image n'est plus nécessaire en tant qu'objet DOM pour la fusion
+            URL.revokeObjectURL(img.src);
+        });
+
+        // Générer l'image fusionnée et le lien de téléchargement
+        canvas.toBlob((blob) => {
+            if (!blob) {
+                manhwaStatusMessage.textContent = "Erreur lors de la génération de l'image fusionnée.";
+                manhwaStatusMessage.classList.add('text-red-500');
+                return;
+            }
+
+            const url = URL.createObjectURL(blob);
+            const downloadLink = document.createElement('a');
+            downloadLink.href = url;
+            downloadLink.download = `manhwa_fusionne_${Date.now()}.png`; // Nom du fichier
+            downloadLink.textContent = `Télécharger l'image fusionnée`;
+            downloadLink.classList.add('bg-purple-600', 'hover:bg-purple-700', 'text-white', 'font-bold', 'py-3', 'px-8', 'rounded-full', 'text-lg', 'shadow-lg', 'transition-colors', 'duration-200', 'block', 'text-center', 'mx-auto');
+
+            manhwaDownloadLinkContainer.innerHTML = ''; // Assure qu'un seul lien est présent
+            manhwaDownloadLinkContainer.appendChild(downloadLink);
+
+            manhwaStatusMessage.textContent = "Fusion terminée !";
+            manhwaStatusMessage.classList.remove('text-blue-600', 'text-red-500');
+            manhwaStatusMessage.classList.add('text-green-600');
+
+        }, 'image/png'); // Spécifier le format de sortie
+    }
+    
     // NOUVEAU : Initialisation: affiche la section "Merge Vinted" par défaut au chargement
     showSection(vintedMergerSection);
     updateMergeButtonState(); // S'assure que l'état initial du bouton est correct
