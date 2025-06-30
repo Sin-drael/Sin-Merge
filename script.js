@@ -66,63 +66,63 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // NOUVELLE ÉTAPE 4 : Gérer le clic sur le bouton personnalisé pour les images de fond
+    // Gérer le clic sur le bouton personnalisé pour les images de fond
     selectBackgroundsButton.addEventListener('click', () => {
         backgroundsInput.click(); // Simule un clic sur l'input de fichier caché
     });
 
 
-    // NOUVELLE ÉTAPE 5 : Lecture des fichiers de fond (backgrounds) et mise à jour de leur affichage
+    // Lecture des fichiers de fond (backgrounds) et mise à jour de leur affichage
     backgroundsInput.addEventListener('change', (event) => {
-    const newFiles = Array.from(event.target.files).filter(file => file.type.startsWith('image/'));
+        const newFiles = Array.from(event.target.files).filter(file => file.type.startsWith('image/'));
 
-    // Crée un Set pour stocker les fichiers uniques (par nom, taille et dernière modification)
-    // afin d'éviter les doublons si l'utilisateur sélectionne plusieurs fois la même image.
-    const uniqueFiles = new Map();
+        // Crée un Map pour stocker les fichiers uniques (par nom, taille et dernière modification)
+        // afin d'éviter les doublons si l'utilisateur sélectionne plusieurs fois la même image.
+        const uniqueFiles = new Map();
 
-    // Ajoute tous les fichiers existants à la Map
-    backgroundImageFiles.forEach(file => {
-        uniqueFiles.set(`${file.name}-${file.size}-${file.lastModified}`, file);
-    });
-
-    // Ajoute les nouveaux fichiers, remplaçant si une nouvelle version d'un fichier existe
-    newFiles.forEach(file => {
-        uniqueFiles.set(`${file.name}-${file.size}-${file.lastModified}`, file);
-    });
-
-    // Convertit la Map de retour en tableau
-    backgroundImageFiles = Array.from(uniqueFiles.values());
-
-    // Mise à jour de l'aperçu et du texte
-    backgroundsPreview.innerHTML = ''; // Nettoie l'aperçu existant
-
-    if (backgroundImageFiles.length > 0) {
-        // Afficher le nombre de fichiers ou le nom du fichier
-        if (backgroundImageFiles.length === 1) {
-            backgroundsFileNames.textContent = backgroundImageFiles[0].name;
-        } else {
-            backgroundsFileNames.textContent = `${backgroundImageFiles.length} fichiers sélectionnés.`;
-        }
-
+        // Ajoute tous les fichiers existants à la Map
         backgroundImageFiles.forEach(file => {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const img = document.createElement('img');
-                img.src = e.target.result;
-                img.classList.add('w-24', 'h-24', 'object-cover', 'rounded-md', 'shadow-sm');
-                backgroundsPreview.appendChild(img);
-            };
-            reader.readAsDataURL(file);
+            uniqueFiles.set(`${file.name}-${file.size}-${file.lastModified}`, file);
         });
-    } else {
-        backgroundsFileNames.textContent = 'Aucun fichier sélectionné.'; // Réinitialiser le texte
-        backgroundsPreview.innerHTML = '<span class="text-gray-400">Aperçu des fonds</span>';
-    }
-    updateMergeButtonState();
 
-    // Réinitialise la valeur de l'input pour permettre la re-sélection des mêmes fichiers
-    event.target.value = '';
-});
+        // Ajoute les nouveaux fichiers, remplaçant si une nouvelle version d'un fichier existe
+        newFiles.forEach(file => {
+            uniqueFiles.set(`${file.name}-${file.size}-${file.lastModified}`, file);
+        });
+
+        // Convertit la Map de retour en tableau
+        backgroundImageFiles = Array.from(uniqueFiles.values());
+
+        // Mise à jour de l'aperçu et du texte
+        backgroundsPreview.innerHTML = ''; // Nettoie l'aperçu existant
+
+        if (backgroundImageFiles.length > 0) {
+            // Afficher le nombre de fichiers ou le nom du fichier
+            if (backgroundImageFiles.length === 1) {
+                backgroundsFileNames.textContent = backgroundImageFiles[0].name;
+            } else {
+                backgroundsFileNames.textContent = `${backgroundImageFiles.length} fichiers sélectionnés.`;
+            }
+
+            backgroundImageFiles.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.classList.add('w-24', 'h-24', 'object-cover', 'rounded-md', 'shadow-sm');
+                    backgroundsPreview.appendChild(img);
+                };
+                reader.readAsDataURL(file);
+            });
+        } else {
+            backgroundsFileNames.textContent = 'Aucun fichier sélectionné.'; // Réinitialiser le texte
+            backgroundsPreview.innerHTML = '<span class="text-gray-400">Aperçu des fonds</span>';
+        }
+        updateMergeButtonState();
+
+        // Réinitialise la valeur de l'input pour permettre la re-sélection des mêmes fichiers
+        event.target.value = '';
+    });
 
     // Merge function
     mergeButton.addEventListener('click', async () => {
@@ -133,15 +133,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         statusMessage.textContent = "Fusion en cours...";
-        statusMessage.classList.remove('text-red-500', 'text-green-600'); // Clean previous status colors
+        statusMessage.classList.remove('text-red-500', 'text-green-600'); // Nettoie les couleurs de statut précédentes
         statusMessage.classList.add('text-blue-600');
-        downloadLinks.innerHTML = ''; // Clear previous download links
+        downloadLinks.innerHTML = ''; // Efface les liens de téléchargement précédents
 
-        // Create a canvas for merging
+        // Crée un canvas pour la fusion
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
 
-        // Ensure the canvas has the size of the overlay image
+        // S'assure que le canvas a la taille de l'image du calque
         canvas.width = overlayImage.naturalWidth;
         canvas.height = overlayImage.naturalHeight;
 
@@ -153,22 +153,40 @@ document.addEventListener('DOMContentLoaded', () => {
 
             await new Promise(resolve => {
                 img.onload = () => {
-                    // Clear the canvas for each new merge
+                    // Nettoie le canvas pour chaque nouvelle fusion
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-                    // Draw the background image (scaled to fit)
-                    // It's crucial to draw the background image BEFORE the overlay
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height); // Resizes background to match overlay
+                    // Dessine l'image de fond (mise à l'échelle pour s'adapter)
+                    // Il est crucial de dessiner l'image de fond AVANT le calque
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height); // Redimensionne l'arrière-plan pour correspondre au calque
 
-                    // Draw the overlay on top
+                    // Dessine le calque par-dessus
                     ctx.drawImage(overlayImage, 0, 0, canvas.width, canvas.height);
 
-                    // Convert the canvas to a PNG image
+                    // Convertit le canvas en image PNG
                     canvas.toBlob((blob) => {
                         const url = URL.createObjectURL(blob);
                         const downloadLink = document.createElement('a');
                         downloadLink.href = url;
-                        downloadLink.download = `fusion_${file.name.split('.')[0]}.png`; // Output file name
+
+                        // --- DÉBUT DE LA MODIFICATION POUR LE NOM DU FICHIER ---
+                        const originalFileName = file.name;
+                        const lastDotIndex = originalFileName.lastIndexOf('.');
+                        let baseName;
+                        let extension;
+
+                        if (lastDotIndex > 0) { // S'il y a une extension
+                            baseName = originalFileName.substring(0, lastDotIndex);
+                            extension = originalFileName.substring(lastDotIndex); // Inclut le point
+                        } else { // Pas d'extension, ou point en début de nom
+                            baseName = originalFileName;
+                            extension = '';
+                        }
+
+                        // Ajout de '-sinmerge' après le nom de base, et s'assure que l'extension est .png
+                        downloadLink.download = `${baseName}-sinmerge.png`;
+                        // --- FIN DE LA MODIFICATION POUR LE NOM DU FICHIER ---
+
                         downloadLink.textContent = `Télécharger ${downloadLink.download}`;
                         downloadLink.classList.add('bg-blue-500', 'hover:bg-blue-600', 'text-white', 'py-2', 'px-4', 'rounded-md', 'block', 'text-center', 'transition-colors', 'duration-200');
                         downloadLinks.appendChild(downloadLink);
@@ -179,7 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         statusMessage.textContent = "Fusion terminée !";
-        statusMessage.classList.remove('text-blue-600', 'text-red-500'); // Clean previous status colors
+        statusMessage.classList.remove('text-blue-600', 'text-red-500'); // Nettoie les couleurs de statut précédentes
         statusMessage.classList.add('text-green-600');
     });
 
