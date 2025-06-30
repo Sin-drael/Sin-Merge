@@ -237,21 +237,20 @@ document.addEventListener('DOMContentLoaded', () => {
             const content = await zip.generateAsync({ type: "blob" });
             const zipFileName = `images_fusionnees_${Date.now()}.zip`; // Nom unique pour le ZIP
 
-            // Crée un lien de téléchargement pour le fichier ZIP
-            const downloadLink = document.createElement('a');
-            downloadLink.href = URL.createObjectURL(content);
-            downloadLink.download = zipFileName;
-            downloadLink.textContent = `Télécharger toutes les ${mergedImageBlobs.length} images (Zip)`;
-            downloadLink.classList.add('bg-purple-600', 'hover:bg-purple-700', 'text-white', 'py-2', 'px-4', 'rounded-md', 'block', 'text-center', 'mt-4', 'transition-colors', 'duration-200'); // Ajout de marges
-            downloadLinks.appendChild(downloadLink); // Ajoute le lien au conteneur de liens de téléchargement
+            // Crée un lien de téléchargement temporaire (non ajouté au DOM)
+            const tempDownloadLink = document.createElement('a');
+            tempDownloadLink.href = URL.createObjectURL(content);
+            tempDownloadLink.download = zipFileName; // Nom du fichier ZIP
 
-            statusMessage.textContent = "Fichier ZIP prêt au téléchargement !";
+            // Simule un clic sur le lien pour déclencher le téléchargement
+            tempDownloadLink.click();
+
+            // Libère la mémoire en révoquant l'URL de l'objet Blob après le téléchargement
+            URL.revokeObjectURL(tempDownloadLink.href);
+
+            statusMessage.textContent = "Fichier ZIP téléchargé !"; // Nouveau message de statut
             statusMessage.classList.remove('text-blue-600');
             statusMessage.classList.add('text-green-600');
-
-            // Simule un clic pour démarrer le téléchargement directement si désiré
-            // downloadLink.click();
-            // URL.revokeObjectURL(downloadLink.href); // Libère l'URL après le clic
 
         } catch (error) {
             console.error("Erreur lors de la création du ZIP :", error);
