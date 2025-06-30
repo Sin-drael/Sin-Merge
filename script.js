@@ -114,6 +114,37 @@ const manhwaDownloadLinkContainer = document.getElementById('manhwaDownloadLink'
         manhwaStatusMessage.textContent = ''; // Efface le message de statut
     };
 
+    // Fonction pour réinitialiser la section Manhwa Fusion
+const resetManhwaImages = () => {
+    manhwaImageFiles = []; // Vide le tableau qui contient les fichiers images
+
+    // Réinitialise l'input de fichier (important pour pouvoir re-sélectionner les mêmes fichiers)
+    manhwaImagesInput.value = '';
+
+    // Réinitialise le texte affichant les noms des fichiers
+    manhwaImagesFileNames.textContent = 'Aucun fichier sélectionné.';
+
+    // Efface tous les aperçus d'images
+    manhwaImagesPreview.innerHTML = '<span class="text-gray-400">Aperçu des images</span>';
+
+    // Réinitialise l'orientation visuelle à "Vertical" par défaut (comme au chargement de la page)
+    orientationVerticalButton.click();
+
+    // Efface le message de statut et retire toutes les classes de couleur
+    manhwaStatusMessage.textContent = '';
+    manhwaStatusMessage.classList.remove('text-red-500', 'text-green-600', 'text-blue-600');
+
+    // Efface le lien de téléchargement s'il y en avait un
+    manhwaDownloadLinkContainer.innerHTML = '';
+
+    // Cache la barre de chargement et son message si elle était visible
+    loadingBarContainer.classList.add('hidden');
+    zipLoadingMessage.classList.add('hidden');
+    loadingBar.style.width = '0%';
+
+    // Met à jour l'état du bouton de fusion (il devrait se désactiver car il n'y a plus d'images)
+    updateManhwaMergeButtonState();
+};
     selectOverlayButton.addEventListener('click', () => {
         overlayInput.click();
     });
@@ -393,6 +424,7 @@ const manhwaDownloadLinkContainer = document.getElementById('manhwaDownloadLink'
 
     // Remarque : la fonction `mergeManhwaImages` sera ajoutée dans une étape ultérieure
     mergeManhwaButton.addEventListener('click', mergeManhwaImages);
+    resetManhwaButton.addEventListener('click', resetManhwaImages);
     // Gérer le clic sur le bouton "Télécharger tout (Zip)"
     downloadAllButton.addEventListener('click', async () => {
         if (mergedImageBlobs.length === 0) {
