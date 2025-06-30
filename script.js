@@ -2,9 +2,14 @@
 
 document.addEventListener('DOMContentLoaded', () => {
     const overlayInput = document.getElementById('overlayInput');
-    const selectOverlayButton = document.getElementById('selectOverlayButton'); // Nouvelle variable
-    const overlayFileName = document.getElementById('overlayFileName');      // Nouvelle variable
+    const selectOverlayButton = document.getElementById('selectOverlayButton');
+    const overlayFileName = document.getElementById('overlayFileName');
+
+    // NOUVELLES VARIABLES pour la section des images de fond
     const backgroundsInput = document.getElementById('backgroundsInput');
+    const selectBackgroundsButton = document.getElementById('selectBackgroundsButton');
+    const backgroundsFileNames = document.getElementById('backgroundsFileNames');
+
     const mergeButton = document.getElementById('mergeButton');
     const overlayPreview = document.getElementById('overlayPreview');
     const backgroundsPreview = document.getElementById('backgroundsPreview');
@@ -27,12 +32,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Step 4: Handle the click on the custom "Choose a file..." button for the overlay
+    // Handle the click on the custom "Choose a file..." button for the overlay
     selectOverlayButton.addEventListener('click', () => {
         overlayInput.click(); // This simulates a click on the hidden file input
     });
 
-    // Step 5: Read the overlay file and update its display
+    // Read the overlay file and update its display
     overlayInput.addEventListener('change', (event) => {
         const file = event.target.files[0];
         if (file && file.type === 'image/png') {
@@ -61,11 +66,25 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Read background files
+    // NOUVELLE ÉTAPE 4 : Gérer le clic sur le bouton personnalisé pour les images de fond
+    selectBackgroundsButton.addEventListener('click', () => {
+        backgroundsInput.click(); // Simule un clic sur l'input de fichier caché
+    });
+
+
+    // NOUVELLE ÉTAPE 5 : Lecture des fichiers de fond (backgrounds) et mise à jour de leur affichage
     backgroundsInput.addEventListener('change', (event) => {
         backgroundImageFiles = Array.from(event.target.files).filter(file => file.type.startsWith('image/'));
-        backgroundsPreview.innerHTML = ''; // Clear the previous preview
+        backgroundsPreview.innerHTML = ''; // Nettoie l'aperçu
+
         if (backgroundImageFiles.length > 0) {
+            // Afficher le nombre de fichiers ou le nom du fichier
+            if (backgroundImageFiles.length === 1) {
+                backgroundsFileNames.textContent = backgroundImageFiles[0].name;
+            } else {
+                backgroundsFileNames.textContent = `${backgroundImageFiles.length} fichiers sélectionnés.`;
+            }
+
             backgroundImageFiles.forEach(file => {
                 const reader = new FileReader();
                 reader.onload = (e) => {
@@ -77,6 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 reader.readAsDataURL(file);
             });
         } else {
+            backgroundsFileNames.textContent = 'Aucun fichier sélectionné.'; // Réinitialiser le texte
             backgroundsPreview.innerHTML = '<span class="text-gray-400">Aperçu des fonds</span>';
         }
         updateMergeButtonState();
@@ -91,7 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         statusMessage.textContent = "Fusion en cours...";
-        statusMessage.classList.remove('text-red-500');
+        statusMessage.classList.remove('text-red-500', 'text-green-600'); // Clean previous status colors
         statusMessage.classList.add('text-blue-600');
         downloadLinks.innerHTML = ''; // Clear previous download links
 
@@ -137,7 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         statusMessage.textContent = "Fusion terminée !";
-        statusMessage.classList.remove('text-blue-600');
+        statusMessage.classList.remove('text-blue-600', 'text-red-500'); // Clean previous status colors
         statusMessage.classList.add('text-green-600');
     });
 
