@@ -668,7 +668,7 @@ const resetManhwaImages = () => {
             });
 
             try {
-                const content = await zip.generateAsync({ type: "blob" }, function updateCallback(metadata) { function updateCallback(metadata) {
+                const content = await zip.generateAsync({ type: "blob" }, function updateCallback(metadata) {
                     const percent = metadata.percent.toFixed(2);
                     loadingBar.style.width = `${percent}%`;
                     zipLoadingMessage.textContent = `Génération du fichier ZIP : ${percent}%`;
