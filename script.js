@@ -2,12 +2,14 @@
 
 document.addEventListener('DOMContentLoaded', () => {
     const overlayInput = document.getElementById('overlayInput');
-    const backgroundsInput = document.getElementById('backgroundsInput');
-    const mergeButton = document.getElementById('mergeButton');
-    const overlayPreview = document.getElementById('overlayPreview');
-    const backgroundsPreview = document.getElementById('backgroundsPreview');
-    const statusMessage = document.getElementById('statusMessage');
-    const downloadLinks = document.getElementById('downloadLinks');
+const selectOverlayButton = document.getElementById('selectOverlayButton'); // Nouvelle variable
+const overlayFileName = document.getElementById('overlayFileName');     // Nouvelle variable
+const backgroundsInput = document.getElementById('backgroundsInput');
+const mergeButton = document.getElementById('mergeButton');
+const overlayPreview = document.getElementById('overlayPreview');
+const backgroundsPreview = document.getElementById('backgroundsPreview');
+const statusMessage = document.getElementById('statusMessage');
+const downloadLinks = document.getElementById('downloadLinks');
 
     let overlayImage = null;
     let backgroundImageFiles = [];
