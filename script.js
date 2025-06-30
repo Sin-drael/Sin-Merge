@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let overlayImage = null;
     let backgroundImageFiles = [];
 
-    // Function to update the state of the merge button
+    // Fonction pour mettre à jour l'état du bouton de fusion
     const updateMergeButtonState = () => {
         if (overlayImage && backgroundImageFiles.length > 0) {
             mergeButton.disabled = false;
@@ -32,16 +32,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Handle the click on the custom "Choose a file..." button for the overlay
+    // Gérer le clic sur le bouton personnalisé "Choisir un fichier..." pour le calque
     selectOverlayButton.addEventListener('click', () => {
-        overlayInput.click(); // This simulates a click on the hidden file input
+        overlayInput.click(); // Simule un clic sur l'input de fichier caché
     });
 
-    // Read the overlay file and update its display
+    // Lire le fichier du calque et mettre à jour son affichage
     overlayInput.addEventListener('change', (event) => {
         const file = event.target.files[0];
         if (file && file.type === 'image/png') {
-            // Display the file name next to the custom button
+            // Afficher le nom du fichier à côté du bouton personnalisé
             overlayFileName.textContent = file.name;
 
             const reader = new FileReader();
@@ -49,9 +49,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 const img = new Image();
                 img.onload = () => {
                     overlayImage = img;
-                    overlayPreview.innerHTML = ''; // Clear the previous preview
+                    overlayPreview.innerHTML = ''; // Nettoyer l'aperçu précédent
                     overlayPreview.appendChild(img);
-                    img.classList.add('max-w-full', 'max-h-full', 'object-contain'); // Tailwind classes for preview
+                    img.classList.add('max-w-full', 'max-h-full', 'object-contain'); // Classes Tailwind pour l'aperçu
                     updateMergeButtonState();
                 };
                 img.src = e.target.result;
@@ -59,7 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
             reader.readAsDataURL(file);
         } else {
             overlayImage = null;
-            // Reset the file name display if no valid file is selected
+            // Réinitialiser l'affichage du nom du fichier si aucun fichier valide n'est sélectionné
             overlayFileName.textContent = 'Aucun fichier sélectionné.';
             overlayPreview.innerHTML = '<span class="text-gray-400">Veuillez sélectionner un fichier PNG valide.</span>';
             updateMergeButtonState();
@@ -76,7 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
     backgroundsInput.addEventListener('change', (event) => {
         const newFiles = Array.from(event.target.files).filter(file => file.type.startsWith('image/'));
 
-        // Crée un Map pour stocker les fichiers uniques (par nom, taille et dernière modification)
+        // Crée une Map pour stocker les fichiers uniques (par nom, taille et dernière modification)
         // afin d'éviter les doublons si l'utilisateur sélectionne plusieurs fois la même image.
         const uniqueFiles = new Map();
 
@@ -124,7 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
         event.target.value = '';
     });
 
-    // Merge function
+    // Fonction de fusion
     mergeButton.addEventListener('click', async () => {
         if (!overlayImage || backgroundImageFiles.length === 0) {
             statusMessage.textContent = "Veuillez sélectionner un calque et au moins une image de fond.";
@@ -153,14 +153,40 @@ document.addEventListener('DOMContentLoaded', () => {
 
             await new Promise(resolve => {
                 img.onload = () => {
-                    // Nettoie le canvas pour chaque nouvelle fusion
+                    // 1. Nettoie le canvas
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-                    // Dessine l'image de fond (mise à l'échelle pour s'adapter)
-                    // Il est crucial de dessiner l'image de fond AVANT le calque
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height); // Redimensionne l'arrière-plan pour correspondre au calque
+                    // 2. Remplit tout le canevas en blanc AVANT de dessiner l'image de fond
+                    ctx.fillStyle = '#FFFFFF'; // Couleur blanche
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-                    // Dessine le calque par-dessus
+                    // 3. Calcule les dimensions et la position pour 'contain'
+                    const imageAspectRatio = img.naturalWidth / img.naturalHeight;
+                    const canvasAspectRatio = canvas.width / canvas.height;
+
+                    let drawWidth;
+                    let drawHeight;
+                    let offsetX = 0;
+                    let offsetY = 0;
+
+                    if (imageAspectRatio > canvasAspectRatio) {
+                        // L'image est plus large par rapport à sa hauteur que le canvas
+                        // Donc, la largeur de l'image correspondra à la largeur du canvas
+                        drawWidth = canvas.width;
+                        drawHeight = canvas.width / imageAspectRatio;
+                        offsetY = (canvas.height - drawHeight) / 2; // Centre verticalement
+                    } else {
+                        // L'image est plus haute par rapport à sa largeur que le canvas (ou les proportions sont similaires)
+                        // Donc, la hauteur de l'image correspondra à la hauteur du canvas
+                        drawHeight = canvas.height;
+                        drawWidth = canvas.height * imageAspectRatio;
+                        offsetX = (canvas.width - drawWidth) / 2; // Centre horizontalement
+                    }
+
+                    // 4. Dessine l'image de fond (maintenant avec 'contain' et centrée)
+                    ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+
+                    // 5. Dessine le calque par-dessus
                     ctx.drawImage(overlayImage, 0, 0, canvas.width, canvas.height);
 
                     // Convertit le canvas en image PNG
@@ -201,6 +227,6 @@ document.addEventListener('DOMContentLoaded', () => {
         statusMessage.classList.add('text-green-600');
     });
 
-    // Initialize button state on page load
+    // Initialiser l'état du bouton au chargement de la page
     updateMergeButtonState();
 });
