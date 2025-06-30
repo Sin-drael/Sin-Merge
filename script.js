@@ -24,15 +24,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const downloadAllButton = document.getElementById('downloadAllButton');
 
     // --- NOUVEAU : Éléments spécifiques à la section Manhwa Fusion ---
-    const manhwaImagesInput = document.getElementById('manhwaImagesInput');
-    const selectManhwaImagesButton = document.getElementById('selectManhwaImagesButton');
-    const manhwaImagesFileNames = document.getElementById('manhwaImagesFileNames');
-    const manhwaImagesPreview = document.getElementById('manhwaImagesPreview');
-    const orientationHorizontalButton = document.getElementById('orientationHorizontal');
-    const orientationVerticalButton = document.getElementById('orientationVertical');
-    const mergeManhwaButton = document.getElementById('mergeManhwaButton');
-    const manhwaStatusMessage = document.getElementById('manhwaStatusMessage');
-    const manhwaDownloadLinkContainer = document.getElementById('manhwaDownloadLink');
+const manhwaImagesInput = document.getElementById('manhwaImagesInput');
+const selectManhwaImagesButton = document.getElementById('selectManhwaImagesButton');
+const manhwaImagesFileNames = document.getElementById('manhwaImagesFileNames');
+const manhwaImagesPreview = document.getElementById('manhwaImagesPreview');
+const orientationHorizontalButton = document.getElementById('orientationHorizontal');
+const orientationVerticalButton = document.getElementById('orientationVertical');
+const mergeManhwaButton = document.getElementById('mergeManhwaButton');
+// NOUVEAU : Référence au bouton Reset Manhwa
+const resetManhwaButton = document.getElementById('resetManhwaButton');
+const manhwaStatusMessage = document.getElementById('manhwaStatusMessage');
+const manhwaDownloadLinkContainer = document.getElementById('manhwaDownloadLink');
 
     let manhwaImageFiles = [];
     let mergeOrientation = 'vertical'; // Par défaut, la fusion est verticale
