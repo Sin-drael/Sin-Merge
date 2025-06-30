@@ -1,6 +1,13 @@
 // script.js
 
 document.addEventListener('DOMContentLoaded', () => {
+    // --- NOUVEAU : Éléments de navigation et de section ---
+    const navVintedMergeButton = document.getElementById('navVintedMerge');
+    const navManhwaFusionButton = document.getElementById('navManhwaFusion');
+    const vintedMergerSection = document.getElementById('vintedMergerSection');
+    const manhwaMergerSection = document.getElementById('manhwaMergerSection');
+
+    // --- Éléments spécifiques à la section Vinted Merge (existants) ---
     const overlayInput = document.getElementById('overlayInput');
     const selectOverlayButton = document.getElementById('selectOverlayButton');
     const overlayFileName = document.getElementById('overlayFileName');
@@ -24,6 +31,35 @@ document.addEventListener('DOMContentLoaded', () => {
     let overlayImage = null;
     let backgroundImageFiles = [];
     let mergedImageBlobs = [];
+
+    // --- NOUVEAU : Fonctions de gestion des sections ---
+
+    // Fonction pour masquer toutes les sections
+    const hideAllSections = () => {
+        vintedMergerSection.classList.add('hidden');
+        manhwaMergerSection.classList.add('hidden');
+        // Ajoutez ici d'autres sections à masquer si vous en créez
+    };
+
+    // Fonction pour afficher une section spécifique
+    const showSection = (sectionElement) => {
+        hideAllSections();
+        sectionElement.classList.remove('hidden');
+    };
+
+    // --- NOUVEAU : Initialisation des écouteurs d'événements pour la navigation ---
+    navVintedMergeButton.addEventListener('click', () => {
+        showSection(vintedMergerSection);
+        // Vous pouvez ajouter ici une logique pour réinitialiser l'état de la section Vinted si nécessaire
+    });
+
+    navManhwaFusionButton.addEventListener('click', () => {
+        showSection(manhwaMergerSection);
+        // Vous pouvez ajouter ici une logique pour initialiser la section Manhwa (quand elle sera développée)
+    });
+
+    // --- Fin des nouvelles sections de navigation ---
+
 
     // Fonction pour mettre à jour l'état du bouton de fusion
     const updateMergeButtonState = () => {
@@ -132,9 +168,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
 
-        canvas.width = overlayImage.naturalWidth;
-        canvas.height = overlayImage.naturalHeight;
-
         for (const file of backgroundImageFiles) {
             statusMessage.textContent = `Fusion de ${file.name}...`;
 
@@ -143,36 +176,86 @@ document.addEventListener('DOMContentLoaded', () => {
 
             await new Promise(resolve => {
                 img.onload = () => {
+                    const imgOriginalWidth = img.naturalWidth;
+                    const imgOriginalHeight = img.naturalHeight;
+
+                    // NOUVELLE LOGIQUE POUR DÉTERMINER LES DIMENSIONS DU CANVAS ET LA ROTATION
+                    let currentCanvasWidth = overlayImage.naturalWidth;
+                    let currentCanvasHeight = overlayImage.naturalHeight;
+                    let rotateCanvas = false;
+
+                    // Si l'image de fond est en paysage, le cadre (calque) doit "tourner" pour que l'image de fond puisse s'y insérer
+                    if (imgOriginalWidth > imgOriginalHeight) {
+                        currentCanvasWidth = overlayImage.naturalHeight; // La hauteur du calque devient la largeur du canvas
+                        currentCanvasHeight = overlayImage.naturalWidth; // La largeur du calque devient la hauteur du canvas
+                        rotateCanvas = true;
+                    }
+
+                    canvas.width = currentCanvasWidth;
+                    canvas.height = currentCanvasHeight;
+
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
                     ctx.fillStyle = '#FFFFFF';
                     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-                    // NOUVELLE LOGIQUE DE REDIMENSIONNEMENT : Portrait vs Paysage
-                    let drawWidth;
-                    let drawHeight;
-                    let offsetX = 0;
-                    let offsetY = 0;
-
-                    const imgOriginalWidth = img.naturalWidth;
-                    const imgOriginalHeight = img.naturalHeight;
-
-                    // Déterminez si l'image est en format portrait ou paysage
-                    if (imgOriginalHeight > imgOriginalWidth) { // Format Portrait (hauteur > largeur)
-                        // Redimensionner sur la hauteur (canvas.height) en conservant les proportions
-                        drawHeight = canvas.height;
-                        drawWidth = (imgOriginalWidth / imgOriginalHeight) * drawHeight;
-                    } else { // Format Paysage (largeur >= hauteur)
-                        // Redimensionner sur la largeur (canvas.width) en conservant les proportions
-                        drawWidth = canvas.width;
-                        drawHeight = (imgOriginalHeight / imgOriginalWidth) * drawWidth;
+                    // Appliquez la rotation du contexte si nécessaire AVANT de dessiner
+                    if (rotateCanvas) {
+                        ctx.save(); // Sauvegarde l'état non-rotatif du contexte
+                        // Déplace l'origine au centre du canvas, tourne, puis ramène l'origine au coin supérieur gauche du cadre rotatif
+                        ctx.translate(canvas.width / 2, canvas.height / 2);
+                        ctx.rotate(Math.PI / 2); // Rotation de 90 degrés (sens horaire)
+                        ctx.translate(-canvas.height / 2, -canvas.width / 2); // Ajuste l'origine pour le dessin
                     }
 
-                    // Centrer l'image si elle n'occupe pas tout le canvas après redimensionnement
-                    offsetX = (canvas.width - drawWidth) / 2;
-                    offsetY = (canvas.height - drawHeight) / 2;
+                    // Logique de redimensionnement pour l'image de fond (conserver les proportions, s'adapter au canvas)
+                    let bgDrawWidth;
+                    let bgDrawHeight;
+                    let bgOffsetX = 0;
+                    let bgOffsetY = 0;
 
-                    ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
-                    ctx.drawImage(overlayImage, 0, 0, canvas.width, canvas.height);
+                    // Calculez les dimensions de dessin de l'image de fond par rapport aux dimensions du canvas actuel
+                    const bgAspectRatio = imgOriginalWidth / imgOriginalHeight;
+                    const canvasAspectRatio = canvas.width / canvas.height;
+
+                    if (bgAspectRatio > canvasAspectRatio) { // L'image est plus large que le canvas
+                        bgDrawWidth = canvas.width;
+                        bgDrawHeight = canvas.width / bgAspectRatio;
+                        bgOffsetY = (canvas.height - bgDrawHeight) / 2;
+                    } else { // L'image est plus haute que le canvas ou a le même ratio
+                        bgDrawHeight = canvas.height;
+                        bgDrawWidth = canvas.height * bgAspectRatio;
+                        bgOffsetX = (canvas.width - bgDrawWidth) / 2;
+                    }
+
+                    ctx.drawImage(img, bgOffsetX, bgOffsetY, bgDrawWidth, bgDrawHeight);
+
+                    // Logique de redimensionnement pour le calque (conserver les proportions, s'adapter au canvas)
+                    let olDrawWidth;
+                    let olDrawHeight;
+                    let olOffsetX = 0;
+                    let olOffsetY = 0;
+
+                    const olOriginalWidth = overlayImage.naturalWidth;
+                    const olOriginalHeight = overlayImage.naturalHeight;
+
+                    const olAspectRatio = olOriginalWidth / olOriginalHeight;
+                    // Note: currentCanvasAspectRatio est déjà calculé et correct pour le canvas après potentielle rotation
+                    if (olAspectRatio > currentCanvasAspectRatio) {
+                        olDrawWidth = canvas.width;
+                        olDrawHeight = canvas.width / olAspectRatio;
+                        olOffsetY = (canvas.height - olDrawHeight) / 2;
+                    } else {
+                        olDrawHeight = canvas.height;
+                        olDrawWidth = canvas.height * olAspectRatio;
+                        olOffsetX = (canvas.width - olDrawWidth) / 2;
+                    }
+
+                    ctx.drawImage(overlayImage, olOffsetX, olOffsetY, olDrawWidth, olDrawHeight);
+
+                    // Restaure le contexte à son état précédent (non-rotatif)
+                    if (rotateCanvas) {
+                        ctx.restore();
+                    }
 
                     canvas.toBlob((blob) => {
                         mergedImageBlobs.push({ blob: blob, name: `${file.name.substring(0, file.name.lastIndexOf('.')) || file.name}-sinmerge.png` });
@@ -272,5 +355,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    updateMergeButtonState();
+    // NOUVEAU : Initialisation: affiche la section "Merge Vinted" par défaut au chargement
+    showSection(vintedMergerSection);
+    updateMergeButtonState(); // S'assure que l'état initial du bouton est correct
 });
