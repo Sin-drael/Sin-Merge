@@ -553,5 +553,10 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // NOUVEAU : Initialisation: affiche la section "Merge Vinted" par défaut au chargement
     showSection(vintedMergerSection);
-    updateMergeButtonState(); // S'assure que l'état initial du bouton est correct
+    updateMergeButtonState(); // S'assure que l'état initial du bouton Vinted est correct
+
+    // --- NOUVEAU : Initialisation de l'état des boutons Manhwa au chargement ---
+    // Simule un clic sur le bouton Vertical pour définir l'état initial visuel et la variable
+    orientationVerticalButton.click();
+    updateManhwaMergeButtonState(); // S'assure que le bouton de fusion Manhwa est désactivé si aucune image n'est sélectionnée
 });
