@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const downloadLinks = document.getElementById('downloadLinks');
     const downloadAllButton = document.getElementById('downloadAllButton');
 
-    // NOUVEAU : Références aux éléments de la barre de chargement
+    // Références aux éléments de la barre de chargement
     const loadingBarContainer = document.getElementById('loadingBarContainer');
     const loadingBar = document.getElementById('loadingBar');
     const zipLoadingMessage = document.getElementById('zipLoadingMessage');
@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
             mergeButton.classList.add('bg-green-400', 'cursor-not-allowed');
         }
         downloadAllButton.classList.add('hidden');
-        // NOUVEAU : Cacher la barre de chargement et son message si les conditions de fusion changent
+        // Cacher la barre de chargement et son message si les conditions de fusion changent
         loadingBarContainer.classList.add('hidden');
         zipLoadingMessage.classList.add('hidden');
         loadingBar.style.width = '0%'; // Réinitialise la largeur de la barre
@@ -147,7 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     ctx.fillStyle = '#FFFFFF';
                     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-                    // NOUVELLE LOGIQUE DE REDIMENSIONNEMENT ICI
+                    // NOUVELLE LOGIQUE DE REDIMENSIONNEMENT : Portrait vs Paysage
                     let drawWidth;
                     let drawHeight;
                     let offsetX = 0;
@@ -170,8 +170,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Centrer l'image si elle n'occupe pas tout le canvas après redimensionnement
                     offsetX = (canvas.width - drawWidth) / 2;
                     offsetY = (canvas.height - drawHeight) / 2;
-
-                    // FIN DE LA NOUVELLE LOGIQUE
 
                     ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
                     ctx.drawImage(overlayImage, 0, 0, canvas.width, canvas.height);
@@ -225,7 +223,7 @@ document.addEventListener('DOMContentLoaded', () => {
         statusMessage.classList.remove('text-red-500', 'text-green-600');
         statusMessage.classList.add('text-blue-600');
 
-        // NOUVEAU : Afficher la barre de chargement et le message
+        // Afficher la barre de chargement et le message
         loadingBarContainer.classList.remove('hidden');
         zipLoadingMessage.classList.remove('hidden');
         loadingBar.style.width = '0%'; // Assurez-vous qu'elle commence à 0%
@@ -246,13 +244,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const zipFileName = `images_fusionnees_${Date.now()}.zip`;
 
+            // Crée un lien de téléchargement temporaire (non ajouté au DOM)
             const tempDownloadLink = document.createElement('a');
             tempDownloadLink.href = URL.createObjectURL(content);
-            tempDownloadLink.download = zipFileName;
+            tempDownloadLink.download = zipFileName; // Nom du fichier ZIP
+
+            // Simule un clic sur le lien pour déclencher le téléchargement
             tempDownloadLink.click();
+
+            // Libère la mémoire en révoquant l'URL de l'objet Blob après le téléchargement
             URL.revokeObjectURL(tempDownloadLink.href);
 
-            statusMessage.textContent = "Fichier ZIP téléchargé !";
+            statusMessage.textContent = "Fichier ZIP téléchargé !"; // Nouveau message de statut
             statusMessage.classList.remove('text-blue-600');
             statusMessage.classList.add('text-green-600');
 
@@ -262,7 +265,7 @@ document.addEventListener('DOMContentLoaded', () => {
             statusMessage.classList.remove('text-blue-600');
             statusMessage.classList.add('text-red-500');
         } finally {
-            // NOUVEAU : Cacher la barre de chargement et le message quoi qu'il arrive
+            // Cacher la barre de chargement et le message quoi qu'il arrive
             loadingBarContainer.classList.add('hidden');
             zipLoadingMessage.classList.add('hidden');
             loadingBar.style.width = '0%'; // Réinitialise la barre pour la prochaine fois
