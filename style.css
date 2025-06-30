@@ -1,6 +1,36 @@
-/* style.css (Ce fichier est optionnel si vous utilisez principalement Tailwind CSS) */
+/* style.css */
 
-/* Exemple de style personnalisé si vous en avez besoin */
-/* body {
-    font-family: 'Arial', sans-serif;
-} */
+/* Règles pour le groupe de logos dans l'en-tête */
+.header-logo-group {
+    /* Tailwind gère déjà le flexbox et le gap sur cet élément avec les classes dans le HTML */
+    /* display: flex; */
+    /* align-items: center; */
+    /* gap: 15px; */ /* Ceci est déjà géré par 'gap-4' de Tailwind (environ 16px) */
+}
+
+.site-logo {
+    height: 50px; /* Taille par défaut pour les logos */
+    object-fit: contain; /* Garde les proportions de l'image */
+}
+
+.dragon-logo {
+    height: 60px; /* Les dragons sont légèrement plus grands */
+}
+
+.main-title-logo {
+    height: 80px; /* Le titre principal est plus grand */
+}
+
+/* Media query pour le responsive, comme dans votre ancien CSS */
+@media (max-width: 768px) {
+    .header-logo-group {
+        flex-direction: column; /* Les logos s'empilent sur les petits écrans */
+        gap: 5px; /* Réduit l'espace entre les logos */
+    }
+    .main-title-logo {
+        height: 60px; /* Réduit la taille du titre sur mobile */
+    }
+    .dragon-logo {
+        height: 40px; /* Réduit la taille des dragons sur mobile */
+    }
+}
