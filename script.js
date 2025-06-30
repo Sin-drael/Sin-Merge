@@ -30,9 +30,6 @@ const manhwaImagesFileNames = document.getElementById('manhwaImagesFileNames');
 const manhwaImagesPreview = document.getElementById('manhwaImagesPreview');
 const orientationHorizontalButton = document.getElementById('orientationHorizontal');
 const orientationVerticalButton = document.getElementById('orientationVertical');
-const mergeManhwaButton = document.getElementById('mergeManhwaButton');
-const manhwaStatusMessage = document.getElementById('manhwaStatusMessage');
-const manhwaDownloadLinkContainer = document.getElementById('manhwaDownloadLink');
 
 // NOUVEAU : Références aux éléments de la barre de chargement SPECIFIQUES à la fusion Manhwa
 const manhwaLoadingBarContainer = document.getElementById('manhwaLoadingBarContainer');
