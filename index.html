@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sinergy Tools</title> <script src="https://cdn.tailwindcss.com"></script>
+    <title>Sinergy Tools</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 
     <script>
       tailwind.config = {
@@ -12,6 +13,9 @@
             colors: {
               // Votre nouvelle couleur d'en-tête personnalisée
               'header-green': '#007782', // Définit votre vert #007782
+              // NOUVEAU : Couleurs pour la barre latérale
+              'sidebar-bg': '#2d3748', // Fond gris foncé pour la sidebar
+              'sidebar-link-hover': '#4a5568', // Couleur de fond des liens au survol
             },
           }
         }
@@ -19,7 +23,8 @@
     </script>
 
     <link rel="stylesheet" href="style.css">
-    <link rel="icon" type="image/png" href="images/icon.png"> 
+    <link rel="icon" type="image/png" href="images/icon.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
 <body class="font-sans bg-gray-100 text-gray-900 min-h-screen flex flex-col">
 
@@ -29,90 +34,99 @@
             <img src="images/test_sinergy_title.png" alt="Sinergy Title Logo" class="site-logo main-title-logo">
             <img src="images/dragon_logo.png" alt="Dragon Logo Right" class="site-logo dragon-logo right-dragon">
         </div>
-        
-        <nav class="mt-4 w-full px-4 flex justify-start gap-4">
-            <button id="navVintedMerge" class="bg-purple-700 hover:bg-purple-800 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-75">
-                Merge Vinted
-            </button>
-            <button id="navManhwaFusion" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75">
-                Fusion Manhwa
-            </button>
-        </nav>
-    </header>
+        </header>
 
-    <main class="container mx-auto my-8 p-6 flex-1">
-        <section id="vintedMergerSection" class="bg-white rounded-lg shadow-lg">
-            <h2 class="text-4xl font-extrabold text-blue-700 mb-4">Fusionnez vos images PNG !</h2>
-            <p class="text-lg leading-relaxed text-gray-700 mb-6">
-                Importez un calque PNG avec des transparences, puis sélectionnez plusieurs images à placer en dessous.
-                Cliquez sur "Fusionner" pour générer les images combinées.
-            </p>
-
-            <div class="space-y-6">
-                <div>
-                    <label class="block text-xl font-semibold text-gray-800 mb-2">
-                        1. Sélectionnez votre calque principal (PNG transparent) :
-                    </label>
-                    <input type="file" id="overlayInput" accept="image/png" class="hidden">
-                    <button id="selectOverlayButton" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full text-sm transition-colors duration-200 cursor-pointer">
-                        Choisir un fichier...
-                    </button>
-                    <span id="overlayFileName" class="ml-3 text-gray-600">Aucun fichier sélectionné.</span>
-
-                    <div id="overlayPreview" class="mt-4 flex justify-center items-center h-48 border border-gray-300 rounded-md bg-gray-50 overflow-hidden">
-                        <span class="text-gray-400">Aperçu du calque</span>
-                    </div>
-                </div>
-
-                <div>
-                    <label class="block text-xl font-semibold text-gray-800 mb-2">
-                        2. Sélectionnez vos images de fond (plusieurs possibles) :
-                    </label>
-                    <input type="file" id="backgroundsInput" accept="image/*" multiple class="hidden">
-                    <button id="selectBackgroundsButton" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full text-sm transition-colors duration-200 cursor-pointer">
-                        Choisir des fichiers...
-                    </button>
-                    <span id="backgroundsFileNames" class="ml-3 text-gray-600">Aucun fichier sélectionné.</span>
-
-                    <div id="backgroundsPreview" class="mt-4 flex flex-wrap gap-4 justify-center">
-                        <span class="text-gray-400">Aperçu des fonds</span>
-                    </div>
-                </div>
-
-                <div class="text-center pt-4">
-                    <button id="mergeButton" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg transition-colors duration-200" disabled>
-                        Fusionner mes images
-                    </button>
-                    <div id="statusMessage" class="mt-4 text-gray-600"></div>
-                    <div id="downloadLinks" class="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
-                    
-                    <div class="text-center mt-6">
-                        <button id="downloadAllButton" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg transition-colors duration-200 hidden">
-                            Télécharger tout (Zip)
+    <div class="flex flex-1"> <aside class="w-64 bg-sidebar-bg text-white shadow-lg flex flex-col p-4">
+            <nav class="flex-1 mt-4">
+                <ul>
+                    <li class="mb-2">
+                        <button id="navVintedMerge" class="flex items-center w-full p-3 rounded-lg text-left hover:bg-sidebar-link-hover transition-colors duration-200">
+                            <i class="fas fa-magic mr-3"></i>
+                            <span>Merge Vinted</span>
                         </button>
-                        <div id="loadingBarContainer" class="hidden mt-4 w-full bg-gray-200 rounded-full h-4">
-                            <div id="loadingBar" class="bg-blue-500 h-4 rounded-full w-0 transition-all duration-500 ease-out"></div>
+                    </li>
+                    <li class="mb-2">
+                        <button id="navManhwaFusion" class="flex items-center w-full p-3 rounded-lg text-left hover:bg-sidebar-link-hover transition-colors duration-200">
+                            <i class="fas fa-book-open mr-3"></i>
+                            <span>Fusion Manhwa</span>
+                        </button>
+                    </li>
+                    </ul>
+            </nav>
+        </aside>
+
+        <div class="flex-1 flex flex-col"> <main class="container mx-auto my-8 p-6 flex-1">
+                <section id="vintedMergerSection" class="bg-white rounded-lg shadow-lg p-6">
+                    <h2 class="text-4xl font-extrabold text-blue-700 mb-4">Fusionnez vos images PNG !</h2>
+                    <p class="text-lg leading-relaxed text-gray-700 mb-6">
+                        Importez un calque PNG avec des transparences, puis sélectionnez plusieurs images à placer en dessous.
+                        Cliquez sur "Fusionner" pour générer les images combinées.
+                    </p>
+
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-xl font-semibold text-gray-800 mb-2">
+                                1. Sélectionnez votre calque principal (PNG transparent) :
+                            </label>
+                            <input type="file" id="overlayInput" accept="image/png" class="hidden">
+                            <button id="selectOverlayButton" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full text-sm transition-colors duration-200 cursor-pointer">
+                                Choisir un fichier...
+                            </button>
+                            <span id="overlayFileName" class="ml-3 text-gray-600">Aucun fichier sélectionné.</span>
+
+                            <div id="overlayPreview" class="mt-4 flex justify-center items-center h-48 border border-gray-300 rounded-md bg-gray-50 overflow-hidden">
+                                <span class="text-gray-400">Aperçu du calque</span>
+                            </div>
                         </div>
-                        <p id="zipLoadingMessage" class="hidden mt-2 text-blue-600 text-sm">Génération du fichier ZIP en cours...</p>
+
+                        <div>
+                            <label class="block text-xl font-semibold text-gray-800 mb-2">
+                                2. Sélectionnez vos images de fond (plusieurs possibles) :
+                            </label>
+                            <input type="file" id="backgroundsInput" accept="image/*" multiple class="hidden">
+                            <button id="selectBackgroundsButton" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full text-sm transition-colors duration-200 cursor-pointer">
+                                Choisir des fichiers...
+                            </button>
+                            <span id="backgroundsFileNames" class="ml-3 text-gray-600">Aucun fichier sélectionné.</span>
+
+                            <div id="backgroundsPreview" class="mt-4 flex flex-wrap gap-4 justify-center">
+                                <span class="text-gray-400">Aperçu des fonds</span>
+                            </div>
+                        </div>
+
+                        <div class="text-center pt-4">
+                            <button id="mergeButton" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg transition-colors duration-200" disabled>
+                                Fusionner mes images
+                            </button>
+                            <div id="statusMessage" class="mt-4 text-gray-600"></div>
+                            <div id="downloadLinks" class="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+
+                            <div class="text-center mt-6">
+                                <button id="downloadAllButton" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg transition-colors duration-200 hidden">
+                                    Télécharger tout (Zip)
+                                </button>
+                                <div id="loadingBarContainer" class="hidden mt-4 w-full bg-gray-200 rounded-full h-4">
+                                    <div id="loadingBar" class="bg-blue-500 h-4 rounded-full w-0 transition-all duration-500 ease-out"></div>
+                                </div>
+                                <p id="zipLoadingMessage" class="hidden mt-2 text-blue-600 text-sm">Génération du fichier ZIP en cours...</p>
+                            </div>
+                        </div>
                     </div>
+                </section>
+
+                <section id="manhwaMergerSection" class="bg-white rounded-lg shadow-lg p-8 hidden">
+                    <h2 class="text-4xl font-extrabold text-blue-700 mb-4">Fusion d'images pour Manhwa</h2>
+                    <p class="text-lg leading-relaxed text-gray-700">Cette section est en cours de développement. Restez à l'écoute !</p>
+                </section>
+
+            </main>
+
+            <footer class="bg-gray-800 text-white p-4 mt-8 text-center">
+                <div class="container mx-auto">
+                    <p>&copy; 2025 Mon Super Site. Tous droits réservés.</p>
                 </div>
-            </div>
-        </section>
-
-        <section id="manhwaMergerSection" class="bg-white rounded-lg shadow-lg p-8 hidden">
-            <h2 class="text-4xl font-extrabold text-blue-700 mb-4">Fusion d'images pour Manhwa</h2>
-            <p class="text-lg leading-relaxed text-gray-700">Cette section est en cours de développement. Restez à l'écoute !</p>
-            </section>
-
-    </main>
-
-    <footer class="bg-gray-800 text-white p-4 mt-8 text-center">
-        <div class="container mx-auto">
-            <p>&copy; 2025 Mon Super Site. Tous droits réservés.</p>
-        </div>
-    </footer>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
+            </footer>
+        </div> </div> <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
