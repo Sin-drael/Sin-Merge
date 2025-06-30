@@ -4,18 +4,43 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mon Super Site - Fusion d'images PNG</title>
+
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              // Vos couleurs Vinted si vous les réintroduisez plus tard
+              // 'vinted-green': '#00a7a0',
+              // 'vinted-dark-green': '#008f88',
+              // 'vinted-light-grey': '#f4f7f6',
+              // 'vinted-medium-grey': '#e8eceb',
+              // 'vinted-dark-grey': '#333',
+              // 'vinted-text-color': '#555',
+              // 'vinted-red': '#e74c3c',
+              // 'vinted-blue': '#3498db',
+
+              // Votre nouvelle couleur d'en-tête
+              'header-green': '#007782', // Définit votre vert personnalisé
+            },
+          }
+        }
+      }
+    </script>
+
     <script src="https://cdn.tailwindcss.com"></script>
+
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="font-sans bg-gray-100 text-gray-900 min-h-screen flex flex-col">
 
-    <header class="bg-white p-4 shadow-md flex justify-center items-center flex-wrap">
-    <div class="header-logo-group flex items-center justify-center gap-4">
-        <img src="images/dragon_logo.png" alt="Dragon Logo Left" class="site-logo dragon-logo left-dragon">
-        <img src="images/test_sinergy_title.png" alt="Sinergy Title Logo" class="site-logo main-title-logo">
-        <img src="images/dragon_logo.png" alt="Dragon Logo Right" class="site-logo dragon-logo right-dragon">
-    </div>
-</header>
+    <header class="bg-header-green p-4 shadow-md flex justify-center items-center flex-wrap">
+        <div class="header-logo-group flex items-center justify-center gap-4">
+            <img src="images/dragon_logo.png" alt="Dragon Logo Left" class="site-logo dragon-logo left-dragon">
+            <img src="images/test_sinergy_title.png" alt="Sinergy Title Logo" class="site-logo main-title-logo">
+            <img src="images/dragon_logo.png" alt="Dragon Logo Right" class="site-logo dragon-logo right-dragon">
+        </div>
+    </header>
 
     <main class="container mx-auto my-8 p-6 bg-white rounded-lg shadow-lg flex-1">
         <h2 class="text-4xl font-extrabold text-blue-700 mb-4">Fusionnez vos images PNG !</h2>
@@ -26,32 +51,34 @@
 
         <div class="space-y-6">
             <div>
-    <label class="block text-xl font-semibold text-gray-800 mb-2">
-        1. Sélectionnez votre calque principal (PNG transparent) :
-    </label>
-    <input type="file" id="overlayInput" accept="image/png" class="hidden"> <button id="selectOverlayButton" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full text-sm transition-colors duration-200 cursor-pointer">
-        Choisir un fichier...
-    </button>
-    <span id="overlayFileName" class="ml-3 text-gray-600">Aucun fichier sélectionné.</span>
+                <label class="block text-xl font-semibold text-gray-800 mb-2">
+                    1. Sélectionnez votre calque principal (PNG transparent) :
+                </label>
+                <input type="file" id="overlayInput" accept="image/png" class="hidden">
+                <button id="selectOverlayButton" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full text-sm transition-colors duration-200 cursor-pointer">
+                    Choisir un fichier...
+                </button>
+                <span id="overlayFileName" class="ml-3 text-gray-600">Aucun fichier sélectionné.</span>
 
-    <div id="overlayPreview" class="mt-4 flex justify-center items-center h-48 border border-gray-300 rounded-md bg-gray-50 overflow-hidden">
-        <span class="text-gray-400">Aperçu du calque</span>
-    </div>
-</div>
+                <div id="overlayPreview" class="mt-4 flex justify-center items-center h-48 border border-gray-300 rounded-md bg-gray-50 overflow-hidden">
+                    <span class="text-gray-400">Aperçu du calque</span>
+                </div>
+            </div>
 
             <div>
-    <label class="block text-xl font-semibold text-gray-800 mb-2">
-        2. Sélectionnez vos images de fond (plusieurs possibles) :
-    </label>
-    <input type="file" id="backgroundsInput" accept="image/*" multiple class="hidden"> <button id="selectBackgroundsButton" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full text-sm transition-colors duration-200 cursor-pointer">
-        Choisir des fichiers...
-    </button>
-    <span id="backgroundsFileNames" class="ml-3 text-gray-600">Aucun fichier sélectionné.</span>
+                <label class="block text-xl font-semibold text-gray-800 mb-2">
+                    2. Sélectionnez vos images de fond (plusieurs possibles) :
+                </label>
+                <input type="file" id="backgroundsInput" accept="image/*" multiple class="hidden">
+                <button id="selectBackgroundsButton" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full text-sm transition-colors duration-200 cursor-pointer">
+                    Choisir des fichiers...
+                </button>
+                <span id="backgroundsFileNames" class="ml-3 text-gray-600">Aucun fichier sélectionné.</span>
 
-    <div id="backgroundsPreview" class="mt-4 flex flex-wrap gap-4 justify-center">
-        <span class="text-gray-400">Aperçu des fonds</span>
-    </div>
-</div>
+                <div id="backgroundsPreview" class="mt-4 flex flex-wrap gap-4 justify-center">
+                    <span class="text-gray-400">Aperçu des fonds</span>
+                </div>
+            </div>
 
             <div class="text-center pt-4">
                 <button id="mergeButton" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg transition-colors duration-200" disabled>
