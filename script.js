@@ -74,33 +74,55 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // NOUVELLE ÉTAPE 5 : Lecture des fichiers de fond (backgrounds) et mise à jour de leur affichage
     backgroundsInput.addEventListener('change', (event) => {
-        backgroundImageFiles = Array.from(event.target.files).filter(file => file.type.startsWith('image/'));
-        backgroundsPreview.innerHTML = ''; // Nettoie l'aperçu
+    const newFiles = Array.from(event.target.files).filter(file => file.type.startsWith('image/'));
 
-        if (backgroundImageFiles.length > 0) {
-            // Afficher le nombre de fichiers ou le nom du fichier
-            if (backgroundImageFiles.length === 1) {
-                backgroundsFileNames.textContent = backgroundImageFiles[0].name;
-            } else {
-                backgroundsFileNames.textContent = `${backgroundImageFiles.length} fichiers sélectionnés.`;
-            }
+    // Crée un Set pour stocker les fichiers uniques (par nom, taille et dernière modification)
+    // afin d'éviter les doublons si l'utilisateur sélectionne plusieurs fois la même image.
+    const uniqueFiles = new Map();
 
-            backgroundImageFiles.forEach(file => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const img = document.createElement('img');
-                    img.src = e.target.result;
-                    img.classList.add('w-24', 'h-24', 'object-cover', 'rounded-md', 'shadow-sm'); // Tailwind classes for preview
-                    backgroundsPreview.appendChild(img);
-                };
-                reader.readAsDataURL(file);
-            });
-        } else {
-            backgroundsFileNames.textContent = 'Aucun fichier sélectionné.'; // Réinitialiser le texte
-            backgroundsPreview.innerHTML = '<span class="text-gray-400">Aperçu des fonds</span>';
-        }
-        updateMergeButtonState();
+    // Ajoute tous les fichiers existants à la Map
+    backgroundImageFiles.forEach(file => {
+        uniqueFiles.set(`${file.name}-${file.size}-${file.lastModified}`, file);
     });
+
+    // Ajoute les nouveaux fichiers, remplaçant si une nouvelle version d'un fichier existe
+    newFiles.forEach(file => {
+        uniqueFiles.set(`${file.name}-${file.size}-${file.lastModified}`, file);
+    });
+
+    // Convertit la Map de retour en tableau
+    backgroundImageFiles = Array.from(uniqueFiles.values());
+
+    // Mise à jour de l'aperçu et du texte
+    backgroundsPreview.innerHTML = ''; // Nettoie l'aperçu existant
+
+    if (backgroundImageFiles.length > 0) {
+        // Afficher le nombre de fichiers ou le nom du fichier
+        if (backgroundImageFiles.length === 1) {
+            backgroundsFileNames.textContent = backgroundImageFiles[0].name;
+        } else {
+            backgroundsFileNames.textContent = `${backgroundImageFiles.length} fichiers sélectionnés.`;
+        }
+
+        backgroundImageFiles.forEach(file => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.classList.add('w-24', 'h-24', 'object-cover', 'rounded-md', 'shadow-sm');
+                backgroundsPreview.appendChild(img);
+            };
+            reader.readAsDataURL(file);
+        });
+    } else {
+        backgroundsFileNames.textContent = 'Aucun fichier sélectionné.'; // Réinitialiser le texte
+        backgroundsPreview.innerHTML = '<span class="text-gray-400">Aperçu des fonds</span>';
+    }
+    updateMergeButtonState();
+
+    // Réinitialise la valeur de l'input pour permettre la re-sélection des mêmes fichiers
+    event.target.value = '';
+});
 
     // Merge function
     mergeButton.addEventListener('click', async () => {
