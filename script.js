@@ -37,6 +37,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let manhwaImageFiles = [];
     let mergeOrientation = 'vertical'; // Par défaut, la fusion est verticale
 
+    // NOUVEAU : Taille maximale des images à fusionner par partie
+    const MAX_IMAGES_PER_CHUNK = 50; // Ajustez ce nombre si nécessaire après des tests
+
     // Références aux éléments de la barre de chargement
     const loadingBarContainer = document.getElementById('loadingBarContainer');
     const loadingBar = document.getElementById('loadingBar');
