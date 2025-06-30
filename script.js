@@ -31,7 +31,6 @@ const manhwaImagesPreview = document.getElementById('manhwaImagesPreview');
 const orientationHorizontalButton = document.getElementById('orientationHorizontal');
 const orientationVerticalButton = document.getElementById('orientationVertical');
 const mergeManhwaButton = document.getElementById('mergeManhwaButton');
-const resetManhwaButton = document.getElementById('resetManhwaButton');
 const manhwaStatusMessage = document.getElementById('manhwaStatusMessage');
 const manhwaDownloadLinkContainer = document.getElementById('manhwaDownloadLink');
 
