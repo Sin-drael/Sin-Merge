@@ -23,6 +23,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const downloadLinks = document.getElementById('downloadLinks');
     const downloadAllButton = document.getElementById('downloadAllButton');
 
+    // Références aux éléments de la barre de chargement (pour la section Vinted Merge / Global si Manhwa utilise les mêmes IDs)
+    const loadingBarContainer = document.getElementById('loadingBarContainer');
+    const loadingBar = document.getElementById('loadingBar');
+    const zipLoadingMessage = document.getElementById('zipLoadingMessage');
+
     // --- Éléments spécifiques à la section Manhwa Fusion ---
     const manhwaImagesInput = document.getElementById('manhwaImagesInput');
     const selectManhwaImagesButton = document.getElementById('selectManhwaImagesButton');
@@ -51,10 +56,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // NOUVEAU : Taille maximale des images à fusionner par partie
     const MAX_IMAGES_PER_CHUNK = 50; // Ajustez ce nombre si nécessaire après des tests
 
-    // Références aux éléments de la barre de chargement (pour la section Vinted Merge / Global si Manhwa utilise les mêmes IDs)
-    const loadingBarContainer = document.getElementById('loadingBarContainer');
-    const loadingBar = document.getElementById('loadingBar');
-    const zipLoadingMessage = document.getElementById('zipLoadingMessage');
 
     let overlayImage = null;
     let backgroundImageFiles = [];
@@ -121,6 +122,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         manhwaDownloadLinkContainer.innerHTML = ''; // Cache le lien de téléchargement précédent
         manhwaStatusMessage.textContent = ''; // Efface le message de statut
+        // Assurez-vous que la barre de chargement est cachée par défaut au changement d'état
+        manhwaLoadingBarContainer.classList.add('hidden');
+        manhwaZipLoadingMessage.classList.add('hidden');
+        manhwaLoadingBar.style.width = '0%';
     };
 
     // Fonction pour réinitialiser la section Manhwa Fusion
@@ -137,7 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
         manhwaImagesPreview.innerHTML = '<span class="text-gray-400">Aperçu des images</span>';
 
         // Réinitialise l'orientation visuelle à "Vertical" par défaut (comme au chargement de la page)
-        orientationVerticalButton.click();
+        orientationVerticalButton.click(); // Simule un clic pour remettre les classes correctement
 
         // Efface le message de statut et retire toutes les classes de couleur
         manhwaStatusMessage.textContent = '';
@@ -148,8 +153,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Cache la barre de chargement et son message si elle était visible
         manhwaLoadingBarContainer.classList.add('hidden'); // Utilisation des IDs Manhwa
-        manhwaZipLoadingMessage.classList.add('hidden');    // Utilisation des IDs Manhwa
-        manhwaLoadingBar.style.width = '0%';                // Utilisation des IDs Manhwa
+        manhwaZipLoadingMessage.classList.add('hidden');     // Utilisation des IDs Manhwa
+        manhwaLoadingBar.style.width = '0%';                 // Utilisation des IDs Manhwa
 
         // Met à jour l'état du bouton de fusion (il devrait se désactiver car il n'y a plus d'images)
         updateManhwaMergeButtonState();
@@ -238,8 +243,8 @@ document.addEventListener('DOMContentLoaded', () => {
         downloadLinks.innerHTML = '';
         mergedImageBlobs = [];
         downloadAllButton.classList.add('hidden');
-        loadingBarContainer.classList.add('hidden');
-        zipLoadingMessage.classList.add('hidden');
+        loadingBarContainer.classList.add('hidden'); // Assurez-vous que c'est caché au début
+        zipLoadingMessage.classList.add('hidden');   // Assurez-vous que c'est caché au début
 
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
@@ -335,6 +340,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     resolve(); // Important pour que la boucle puisse continuer même en cas d'erreur
                 };
             });
+            // NOUVEAU : Libérer l'URL de l'objet image après utilisation pour éviter les fuites de mémoire.
             URL.revokeObjectURL(img.src);
         }
 
@@ -347,9 +353,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // L'écouteur pour mergeManhwaButton est commenté car la fonction mergeManhwaImages est définie plus bas.
-    // Il sera réactivé une fois que la fonction mergeManhwaImages sera pleinement fonctionnelle.
-    mergeManhwaButton.addEventListener('click', mergeManhwaImages); // COMMENTE TEMPORAIREMENT
+    // CORRIGÉ : L'écouteur pour mergeManhwaButton est maintenant ACTIF
+    mergeManhwaButton.addEventListener('click', mergeManhwaImages);
     resetManhwaButton.addEventListener('click', resetManhwaImages);
 
     // Gérer le clic sur le bouton "Télécharger tout (Zip)"
@@ -413,6 +418,82 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // --- Gérer la sélection des images Manhwa ---
+    selectManhwaImagesButton.addEventListener('click', () => {
+        manhwaImagesInput.click();
+    });
+
+    manhwaImagesInput.addEventListener('change', (event) => {
+        const newFiles = Array.from(event.target.files).filter(file => file.type.startsWith('image/'));
+
+        const uniqueFiles = new Map();
+        manhwaImageFiles.forEach(file => {
+            uniqueFiles.set(`${file.name}-${file.size}-${file.lastModified}`, file);
+        });
+        newFiles.forEach(file => {
+            uniqueFiles.set(`${file.name}-${file.size}-${file.lastModified}`, file);
+        });
+        manhwaImageFiles = Array.from(uniqueFiles.values());
+
+        manhwaImagesFileNames.textContent = manhwaImageFiles.length > 0
+            ? `${manhwaImageFiles.length} fichier(s) sélectionné(s).`
+            : 'Aucun fichier sélectionné.';
+
+        manhwaImagesPreview.innerHTML = '';
+        if (manhwaImageFiles.length > 0) {
+            manhwaImageFiles.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const imgContainer = document.createElement('div');
+                    imgContainer.classList.add('relative', 'w-24', 'h-24', 'group');
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.classList.add('w-full', 'h-full', 'object-cover', 'rounded-md', 'shadow-sm');
+                    imgContainer.appendChild(img);
+
+                    const deleteButton = document.createElement('button');
+                    deleteButton.innerHTML = '<i class="fas fa-times-circle"></i>';
+                    deleteButton.classList.add('absolute', 'top-0', 'right-0', 'bg-red-500', 'text-white', 'rounded-full', 'w-6', 'h-6', 'flex', 'items-center', 'justify-center', 'opacity-0', 'group-hover:opacity-100', 'transition-opacity', 'duration-200');
+                    deleteButton.addEventListener('click', () => {
+                        manhwaImageFiles = manhwaImageFiles.filter(f => f !== file);
+                        imgContainer.remove();
+                        manhwaImagesFileNames.textContent = manhwaImageFiles.length > 0
+                            ? `${manhwaImageFiles.length} fichier(s) sélectionné(s).`
+                            : 'Aucun fichier sélectionné.';
+                        updateManhwaMergeButtonState();
+                    });
+                    imgContainer.appendChild(deleteButton);
+
+                    manhwaImagesPreview.appendChild(imgContainer);
+                };
+                reader.readAsDataURL(file);
+            });
+        } else {
+            manhwaImagesPreview.innerHTML = '<span class="text-gray-400">Aperçu des images</span>';
+        }
+        event.target.value = '';
+        updateManhwaMergeButtonState();
+    });
+
+    // --- Gérer le changement d'orientation de fusion Manhwa ---
+    orientationHorizontalButton.addEventListener('click', () => {
+        mergeOrientation = 'horizontal';
+        orientationHorizontalButton.classList.add('bg-blue-500', 'text-white', 'border-blue-500');
+        orientationHorizontalButton.classList.remove('border-gray-300', 'text-gray-700', 'hover:bg-gray-100');
+        orientationVerticalButton.classList.remove('bg-blue-500', 'text-white', 'border-blue-500');
+        orientationVerticalButton.classList.add('border-gray-300', 'text-gray-700', 'hover:bg-gray-100');
+        updateManhwaMergeButtonState();
+    });
+
+    orientationVerticalButton.addEventListener('click', () => {
+        mergeOrientation = 'vertical';
+        orientationVerticalButton.classList.add('bg-blue-500', 'text-white', 'border-blue-500');
+        orientationVerticalButton.classList.remove('border-gray-300', 'text-gray-700', 'hover:bg-gray-100');
+        orientationHorizontalButton.classList.remove('bg-blue-500', 'text-white', 'border-blue-500');
+        orientationHorizontalButton.classList.add('border-gray-300', 'text-gray-700', 'hover:bg-gray-100');
+        updateManhwaMergeButtonState();
+    });
+
     // --- NOUVEAU : Fonction de fusion des images Manhwa (avec gestion des chunks et ZIP) ---
     async function mergeManhwaImages() {
         if (manhwaImageFiles.length === 0) {
@@ -435,7 +516,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const allLoadedImages = [];
         let loadedCount = 0;
 
-        // Charger toutes les images une par une pour mettre à jour la barre de progression
+        // Charger toutes les images une par one pour mettre à jour la barre de progression
         for (const file of manhwaImageFiles) {
             const img = new Image();
             img.src = URL.createObjectURL(file);
@@ -454,10 +535,9 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             if (loadedImg && loadedImg.naturalWidth > 0 && loadedImg.naturalHeight > 0) {
                 allLoadedImages.push(loadedImg);
-            } else {
-                // Important: Révoquer l'URL même si le chargement échoue pour éviter les fuites
-                URL.revokeObjectURL(img.src);
             }
+            // IMPORTANT : Revoke l'URL de l'objet, qu'il ait réussi ou échoué.
+            URL.revokeObjectURL(img.src);
         }
 
         if (allLoadedImages.length === 0) {
@@ -465,7 +545,7 @@ document.addEventListener('DOMContentLoaded', () => {
             manhwaStatusMessage.classList.add('text-red-500');
             // Cacher la barre de chargement
             manhwaLoadingBarContainer.classList.add('hidden'); // Utilisation des IDs Manhwa
-            manhwaZipLoadingMessage.classList.add('hidden');    // Utilisation des IDs Manhwa
+            manhwaZipLoadingMessage.classList.add('hidden');     // Utilisation des IDs Manhwa
             return;
         }
 
@@ -532,9 +612,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 manhwaStatusMessage.classList.add('text-red-500');
                 // Cacher la barre de chargement
                 manhwaLoadingBarContainer.classList.add('hidden'); // Utilisation des IDs Manhwa
-                manhwaZipLoadingMessage.classList.add('hidden');    // Utilisation des IDs Manhwa
-                // Révoquer les URL des images chargées car on quitte la fonction
-                allLoadedImages.forEach(img => URL.revokeObjectURL(img.src));
+                manhwaZipLoadingMessage.classList.add('hidden');     // Utilisation des IDs Manhwa
                 return;
             }
 
@@ -551,7 +629,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // --- NOUVEAU : Révoquer toutes les URL d'objet après que toutes les images ont été traitées ---
-        allLoadedImages.forEach(img => URL.revokeObjectURL(img.src));
+        // (Cette ligne est désormais redondante car chaque URL est révoquée après le chargement de l'image)
+        // allLoadedImages.forEach(img => URL.revokeObjectURL(img.src));
 
 
         // Si une seule partie a été générée, proposer le téléchargement direct, sinon proposer un ZIP
@@ -622,9 +701,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Cacher la barre de chargement et le message quoi qu'il arrive à la fin
         manhwaLoadingBarContainer.classList.add('hidden'); // Utilisation des IDs Manhwa
-        manhwaZipLoadingMessage.classList.add('hidden');    // Utilisation des IDs Manhwa
-        manhwaLoadingBar.style.width = '0%';                // Utilisation des IDs Manhwa
+        manhwaZipLoadingMessage.classList.add('hidden');     // Utilisation des IDs Manhwa
+        manhwaLoadingBar.style.width = '0%';                 // Utilisation des IDs Manhwa
     }
+
     // NOUVEAU : Initialisation: affiche la section "Merge Vinted" par défaut au chargement
     showSection(vintedMergerSection);
     updateMergeButtonState(); // S'assure que l'état initial du bouton Vinted est correct
