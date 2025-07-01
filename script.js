@@ -262,25 +262,26 @@ document.addEventListener('DOMContentLoaded', () => {
                     let canvasWidth;
                     let canvasHeight;
 
-                    // Logique conditionnelle basée sur l'orientation du CALQUE (overlay)
-                    if (overlayAspectRatio <= 1) { // Le calque est portrait (hauteur >= largeur) ou carré
-                        // L'image de fond reste à sa taille originale.
-                        // Le cadre (overlay) et le canvas sont redimensionnés pour s'adapter à la taille de l'image de fond.
+                    // Logique conditionnelle basée sur l'orientation de l'IMAGE DE FOND
+                    // imgAspectRatio <= 1 signifie que l'image de fond est portrait ou carrée
+                    if (imgAspectRatio <= 1) { // L'image de fond est portrait (hauteur >= largeur) ou carrée
+                        // Si l'image de fond est portrait, le cadre prend EXACTEMENT les dimensions de l'image de fond.
                         canvasWidth = imgOriginalWidth;
-                        canvasHeight = imgOriginalHeight; // Hauteur du cadre = hauteur de l'image
+                        canvasHeight = imgOriginalHeight;
 
                         // L'image de fond est dessinée à sa taille originale, elle remplira le canvas.
                         imgOffsetX = 0;
                         imgOffsetY = 0;
 
-                    } else { // Le calque est paysage (largeur > hauteur)
-                        // Le cadre (overlay) se redimensionne pour avoir la même largeur que l'image de fond,
-                        // tout en gardant ses proportions.
+                    } else { // L'image de fond est paysage (largeur > hauteur)
+                        // Si l'image de fond est paysage, le cadre prend la largeur de l'image de fond,
+                        // et sa hauteur est calculée pour maintenir les proportions du CALQUE (overlay).
                         canvasWidth = imgOriginalWidth;
-                        // Calcul de la nouvelle hauteur du cadre pour rester proportionnel à l'overlay original
+                        // Calcul de la hauteur du cadre pour rester proportionnel au CALQUE (overlay)
                         canvasHeight = canvasWidth / overlayAspectRatio;
 
                         // L'image de fond est dessinée à sa taille originale, centrée dans le cadre redimensionné.
+                        // Il y aura des bandes blanches en haut et en bas si l'image de fond est moins "haute" que le cadre.
                         imgOffsetX = (canvasWidth - imgOriginalWidth) / 2; // Sera 0 si canvasWidth == imgOriginalWidth
                         imgOffsetY = (canvasHeight - imgOriginalHeight) / 2; // Centrage vertical
                     }
