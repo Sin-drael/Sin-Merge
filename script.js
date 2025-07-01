@@ -268,16 +268,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         // Le cadre (overlay) et le canvas sont redimensionnés pour s'adapter à la taille de l'image de fond.
                         canvasWidth = imgOriginalWidth;
                         // Calculer la hauteur du cadre (overlay) si sa largeur est celle de l'image de fond
-                        // L'aspect ratio de l'overlay est overlayImage.naturalWidth / overlayImage.naturalHeight.
-                        // Si le canvas.width est imgOriginalWidth, alors canvas.height doit être proportionnel.
                         canvasHeight = canvasWidth / overlayAspectRatio;
 
                         // L'image de fond est dessinée à sa taille originale, centrée dans le canvas.
-                        imgOffsetX = (canvasWidth - imgOriginalWidth) / 2; // Ceci sera 0 si canvasWidth == imgOriginalWidth
-                        imgOffsetY = (canvasHeight - imgOriginalHeight) / 2; // Centrer verticalement l'image de fond
+                        imgOffsetX = (canvasWidth - imgOriginalWidth) / 2; // Should be 0 if canvasWidth == imgOriginalWidth
+                        imgOffsetY = (canvasHeight - imgOriginalHeight) / 2; // Center vertically
 
                     } else { // Le calque est paysage (largeur > hauteur)
-                        // Cette partie est correcte et ne change pas.
                         // L'image de fond reste à sa taille originale.
                         // Le cadre (overlay) et le canvas sont redimensionnés pour s'adapter à la taille de l'image de fond.
                         canvasWidth = imgOriginalWidth;
@@ -285,8 +282,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         canvasHeight = canvasWidth / overlayAspectRatio;
 
                         // L'image de fond est dessinée à sa taille originale, centrée dans le canvas.
-                        imgOffsetX = (canvasWidth - imgOriginalWidth) / 2; // Ceci sera 0 si canvasWidth == imgOriginalWidth
-                        imgOffsetY = (canvasHeight - imgOriginalHeight) / 2; // Centrer verticalement
+                        imgOffsetX = (canvasWidth - imgOriginalWidth) / 2; // Should be 0 if canvasWidth == imgOriginalWidth
+                        imgOffsetY = (canvasHeight - imgOriginalHeight) / 2; // Center vertically
                     }
 
                     // Appliquer les dimensions calculées au canvas
