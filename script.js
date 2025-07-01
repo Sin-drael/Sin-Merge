@@ -349,7 +349,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // L'écouteur pour mergeManhwaButton est commenté car la fonction mergeManhwaImages est définie plus bas.
     // Il sera réactivé une fois que la fonction mergeManhwaImages sera pleinement fonctionnelle.
-    // mergeManhwaButton.addEventListener('click', mergeManhwaImages); // COMMENTE TEMPORAIREMENT
+    mergeManhwaButton.addEventListener('click', mergeManhwaImages); // COMMENTE TEMPORAIREMENT
     resetManhwaButton.addEventListener('click', resetManhwaImages);
 
     // Gérer le clic sur le bouton "Télécharger tout (Zip)"
