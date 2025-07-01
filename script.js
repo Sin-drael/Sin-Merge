@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const manhwaImagesInput = document.getElementById('manhwaImagesInput');
     const selectManhwaImagesButton = document.getElementById('selectManhwaImagesButton');
     const manhwaImagesFileNames = document.getElementById('manhwaImagesFileNames');
-    const manhwaImagesPreview = document = document.getElementById('manhwaImagesPreview'); // Correction ici (était document = document...)
+    const manhwaImagesPreview = document.getElementById('manhwaImagesPreview'); // Correction ici
     const orientationHorizontalButton = document.getElementById('orientationHorizontal');
     const orientationVerticalButton = document.getElementById('orientationVertical');
 
@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const manhwaZipLoadingMessage = document.getElementById('manhwaZipLoadingMessage');
 
     // NOUVEAU : Référence au bouton Reset Manhwa
-    const resetManhwaButton = document.getElementById('resetManhwaButton'); // Assurez-vous qu'elle est unique ici
+    const resetManhwaButton = document.getElementById('resetManhwaButton');
     const manhwaStatusMessage = document.getElementById('manhwaStatusMessage');
     const manhwaDownloadLinkContainer = document.getElementById('manhwaDownloadLink');
 
@@ -234,8 +234,8 @@ document.addEventListener('DOMContentLoaded', () => {
         downloadLinks.innerHTML = '';
         mergedImageBlobs = [];
         downloadAllButton.classList.add('hidden');
-        loadingBarContainer.classList.add('hidden'); // Cacher la barre avant la fusion principale
-        zipLoadingMessage.classList.add('hidden');   // Cacher le message de la barre
+        loadingBarContainer.classList.add('hidden');
+        zipLoadingMessage.classList.add('hidden');
 
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
@@ -248,50 +248,40 @@ document.addEventListener('DOMContentLoaded', () => {
 
             await new Promise(resolve => {
                 img.onload = () => {
-                    const imgOriginalWidth = img.naturalWidth;
-                    const imgOriginalHeight = img.naturalHeight;
-
                     // *** DÉBUT DE LA MODIFICATION POUR LA SECTION VINTED MERGE ***
-                    // Le canvas prend les dimensions de l'image de fond
-                    canvas.width = imgOriginalWidth;
-                    canvas.height = imgOriginalHeight;
+                    // Le canvas prend les dimensions du calque (overlay)
+                    canvas.width = overlayImage.naturalWidth;
+                    canvas.height = overlayImage.naturalHeight;
 
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    // Remplir le canvas avec du blanc
                     ctx.fillStyle = '#FFFFFF';
                     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-                    // --- Dessin de l'image de fond ---
-                    // L'image de fond est dessinée sur tout le canvas (elle en a les dimensions)
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-                    // --- Redimensionnement et dessin du calque (overlay) ---
-                    // Le calque doit s'adapter aux dimensions du canvas (qui sont celles de l'image de fond)
-                    let olDrawWidth;
-                    let olDrawHeight;
-                    let olOffsetX = 0;
-                    let olOffsetY = 0;
-
-                    const olOriginalWidth = overlayImage.naturalWidth;
-                    const olOriginalHeight = overlayImage.naturalHeight;
-                    const olAspectRatio = olOriginalWidth / olOriginalHeight;
+                    // --- Dessin de l'image de fond (centrée et contenue dans le canvas) ---
+                    const imgOriginalWidth = img.naturalWidth;
+                    const imgOriginalHeight = img.naturalHeight;
+                    const imgAspectRatio = imgOriginalWidth / imgOriginalHeight;
                     const canvasAspectRatio = canvas.width / canvas.height;
 
-                    // Calcule comment le calque doit s'adapter au canvas en conservant ses proportions
-                    // (ici, on veut qu'il "couvre" le canvas sans le déformer)
-                    if (olAspectRatio > canvasAspectRatio) { // Le calque est plus large proportionnellement
-                        olDrawHeight = canvas.height;
-                        olDrawWidth = canvas.height * olAspectRatio;
-                        olOffsetX = (canvas.width - olDrawWidth) / 2; // Centrer horizontalement
-                    } else { // Le calque est plus haut proportionnellement ou même ratio
-                        olDrawWidth = canvas.width;
-                        olDrawHeight = canvas.width / olAspectRatio;
-                        olOffsetY = (canvas.height - olDrawHeight) / 2; // Centrer verticalement
-                    }
+                    let imgDrawWidth;
+                    let imgDrawHeight;
+                    let imgOffsetX = 0;
+                    let imgOffsetY = 0;
 
-                    // Dessine le calque (frame) sur l'image de fond.
-                    // Il est redimensionné pour remplir l'espace du canvas,
-                    // et centré si ses proportions ne correspondent pas exactement à celles du canvas.
-                    ctx.drawImage(overlayImage, olOffsetX, olOffsetY, olDrawWidth, olDrawHeight);
+                    // Calculer les dimensions de dessin pour que l'image de fond soit contenue et centrée
+                    if (imgAspectRatio > canvasAspectRatio) { // L'image est proportionnellement plus large que le cadre
+                        imgDrawWidth = canvas.width;
+                        imgDrawHeight = canvas.width / imgAspectRatio;
+                        imgOffsetY = (canvas.height - imgDrawHeight) / 2; // Centrer verticalement
+                    } else { // L'image est proportionnellement plus haute ou a le même ratio que le cadre
+                        imgDrawHeight = canvas.height;
+                        imgDrawWidth = canvas.height * imgAspectRatio;
+                        imgOffsetX = (canvas.width - imgDrawWidth) / 2; // Centrer horizontalement
+                    }
+                    ctx.drawImage(img, imgOffsetX, imgOffsetY, imgDrawWidth, imgDrawHeight);
+
+                    // --- Dessin du calque (overlay) par-dessus, à la taille exacte du canvas ---
+                    ctx.drawImage(overlayImage, 0, 0, canvas.width, canvas.height);
                     // *** FIN DE LA MODIFICATION POUR LA SECTION VINTED MERGE ***
 
                     canvas.toBlob((blob) => {
@@ -338,8 +328,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Remarque : la fonction `mergeManhwaImages` sera ajoutée dans une étape ultérieure
+    const mergeManhwaButton = document.getElementById('mergeManhwaButton'); // Déclaration manquante
     mergeManhwaButton.addEventListener('click', mergeManhwaImages);
-    resetManhwaButton.addEventListener('click', resetManhwaImages); // Il était déclaré deux fois, j'ai laissé cette ligne et supprimé l'autre si elle existait.
+    resetManhwaButton.addEventListener('click', resetManhwaImages);
 
     // Gérer le clic sur le bouton "Télécharger tout (Zip)"
     downloadAllButton.addEventListener('click', async () => {
