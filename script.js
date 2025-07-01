@@ -264,27 +264,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     // Logique conditionnelle basée sur l'orientation du CALQUE (overlay)
                     if (overlayAspectRatio <= 1) { // Le calque est portrait (hauteur >= largeur) ou carré
-                        // Le canvas (et donc le cadre) prend la largeur de l'image de fond.
+                        // Le canvas (et donc le cadre final) prend EXACTEMENT les dimensions de l'image de fond.
                         canvasWidth = imgOriginalWidth;
-                        // La hauteur du canvas est calculée pour maintenir les proportions du cadre (overlay).
-                        canvasHeight = canvasWidth / overlayAspectRatio;
+                        canvasHeight = imgOriginalHeight;
 
-                        // L'image de fond est dessinée à sa taille originale.
-                        // Elle est centrée horizontalement (sera 0 si canvasWidth == imgOriginalWidth).
-                        imgOffsetX = (canvasWidth - imgOriginalWidth) / 2;
-                        // Elle est centrée verticalement dans le cadre redimensionné.
-                        imgOffsetY = (canvasHeight - imgOriginalHeight) / 2;
+                        // L'image de fond est dessinée à sa taille originale, elle remplira le canvas.
+                        imgOffsetX = 0;
+                        imgOffsetY = 0;
 
                     } else { // Le calque est paysage (largeur > hauteur)
-                        // Cette partie est correcte et reste inchangée.
+                        // Cette partie est correcte et reste inchangée, elle utilise la logique précédente.
                         // Le canvas (et donc le cadre) prend la largeur de l'image de fond.
                         canvasWidth = imgOriginalWidth;
                         // La hauteur du canvas est calculée pour maintenir les proportions du cadre (overlay).
                         canvasHeight = canvasWidth / overlayAspectRatio;
 
                         // L'image de fond est dessinée à sa taille originale, centrée dans le canvas.
-                        imgOffsetX = (canvasWidth - imgOriginalWidth) / 2; // Sera 0 si canvasWidth == imgOriginalWidth
-                        imgOffsetY = (canvasHeight - imgOriginalHeight) / 2; // Centrer verticalement
+                        imgOffsetX = (canvasWidth - imgOriginalWidth) / 2;
+                        imgOffsetY = (canvasHeight - imgOriginalHeight) / 2;
                     }
 
                     // Appliquer les dimensions calculées au canvas
