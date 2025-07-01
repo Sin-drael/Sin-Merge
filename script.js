@@ -264,26 +264,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     // Logique conditionnelle basée sur l'orientation du CALQUE (overlay)
                     if (overlayAspectRatio <= 1) { // Le calque est portrait (hauteur >= largeur) ou carré
-                        // L'image de fond reste à sa taille originale.
-                        // Le cadre (overlay) et le canvas sont redimensionnés pour s'adapter à la taille de l'image de fond.
+                        // Le canvas (et donc le cadre) prend la largeur de l'image de fond.
                         canvasWidth = imgOriginalWidth;
-                        // Calculer la hauteur du cadre (overlay) si sa largeur est celle de l'image de fond
+                        // La hauteur du canvas est calculée pour maintenir les proportions du cadre (overlay).
                         canvasHeight = canvasWidth / overlayAspectRatio;
 
-                        // L'image de fond est dessinée à sa taille originale, centrée dans le canvas.
-                        imgOffsetX = (canvasWidth - imgOriginalWidth) / 2; // Should be 0 if canvasWidth == imgOriginalWidth
-                        imgOffsetY = (canvasHeight - imgOriginalHeight) / 2; // Center vertically
+                        // L'image de fond est dessinée à sa taille originale.
+                        // Elle est centrée horizontalement (sera 0 si canvasWidth == imgOriginalWidth).
+                        imgOffsetX = (canvasWidth - imgOriginalWidth) / 2;
+                        // Elle est centrée verticalement dans le cadre redimensionné.
+                        imgOffsetY = (canvasHeight - imgOriginalHeight) / 2;
 
                     } else { // Le calque est paysage (largeur > hauteur)
-                        // L'image de fond reste à sa taille originale.
-                        // Le cadre (overlay) et le canvas sont redimensionnés pour s'adapter à la taille de l'image de fond.
+                        // Cette partie est correcte et reste inchangée.
+                        // Le canvas (et donc le cadre) prend la largeur de l'image de fond.
                         canvasWidth = imgOriginalWidth;
-                        // Calculer la hauteur du cadre (overlay) si sa largeur est celle de l'image de fond
+                        // La hauteur du canvas est calculée pour maintenir les proportions du cadre (overlay).
                         canvasHeight = canvasWidth / overlayAspectRatio;
 
                         // L'image de fond est dessinée à sa taille originale, centrée dans le canvas.
-                        imgOffsetX = (canvasWidth - imgOriginalWidth) / 2; // Should be 0 if canvasWidth == imgOriginalWidth
-                        imgOffsetY = (canvasHeight - imgOriginalHeight) / 2; // Center vertically
+                        imgOffsetX = (canvasWidth - imgOriginalWidth) / 2; // Sera 0 si canvasWidth == imgOriginalWidth
+                        imgOffsetY = (canvasHeight - imgOriginalHeight) / 2; // Centrer verticalement
                     }
 
                     // Appliquer les dimensions calculées au canvas
@@ -302,7 +303,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     canvas.toBlob((blob) => {
                         mergedImageBlobs.push({ blob: blob, name: `${file.name.substring(0, file.name.lastIndexOf('.')) || file.name}-sinmerge.png` });
-
+                        
                         const url = URL.createObjectURL(blob);
                         const downloadLink = document.createElement('a');
                         downloadLink.href = url;
