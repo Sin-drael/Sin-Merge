@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // NOUVEAU : Références aux éléments de la barre de chargement SPECIFIQUES à la fusion Manhwa
     const manhwaLoadingBarContainer = document.getElementById('manhwaLoadingBarContainer');
     const manhwaLoadingBar = document.getElementById('manhwaLoadingBar');
-    const manhwaZipLoadingMessage = document.getElementById('manhwaZipLoadingMessage');
+    const manhwaZipLoadingMessage = document = document.getElementById('manhwaZipLoadingMessage');
 
     // NOUVEAU : Référence au bouton Reset Manhwa
     const resetManhwaButton = document.getElementById('resetManhwaButton');
@@ -248,60 +248,57 @@ document.addEventListener('DOMContentLoaded', () => {
 
             await new Promise(resolve => {
                 img.onload = () => {
-                    // *** DÉBUT DE LA MODIFICATION POUR LA SECTION VINTED MERGE ***
-                    // Le canvas prend toujours les dimensions du calque (overlay)
-                    canvas.width = overlayImage.naturalWidth;
-                    canvas.height = overlayImage.naturalHeight;
-
-                    // Remplir le canvas avec du blanc avant de dessiner quoi que ce soit
-                    ctx.fillStyle = '#FFFFFF';
-                    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
                     const imgOriginalWidth = img.naturalWidth;
                     const imgOriginalHeight = img.naturalHeight;
                     const imgAspectRatio = imgOriginalWidth / imgOriginalHeight;
 
                     const overlayAspectRatio = overlayImage.naturalWidth / overlayImage.naturalHeight;
 
-                    let imgDrawWidth;
-                    let imgDrawHeight;
+                    let imgDrawWidth = imgOriginalWidth; // Default to original image size
+                    let imgDrawHeight = imgOriginalHeight; // Default to original image size
                     let imgOffsetX = 0;
                     let imgOffsetY = 0;
 
+                    let canvasWidth;
+                    let canvasHeight;
+
                     // Logique conditionnelle basée sur l'orientation du CALQUE (overlay)
                     if (overlayAspectRatio <= 1) { // Le calque est portrait (hauteur >= largeur) ou carré
-                        // L'image de fond doit REMPLIR le cadre (couvrir), quitte à être recadrée
-                        // On s'assure que la dimension la plus petite de l'image de fond remplit la dimension correspondante du canvas
-                        if (imgAspectRatio > canvas.width / canvas.height) { // Image plus large que le canvas (relativement)
-                            imgDrawHeight = canvas.height;
-                            imgDrawWidth = canvas.height * imgAspectRatio;
-                        } else { // Image plus haute que le canvas (relativement) ou même ratio
-                            imgDrawWidth = canvas.width;
-                            imgDrawHeight = canvas.width / imgAspectRatio;
-                        }
-                        imgOffsetX = (canvas.width - imgDrawWidth) / 2;
-                        imgOffsetY = (canvas.height - imgDrawHeight) / 2;
+                        // L'image de fond reste à sa taille originale.
+                        // Le cadre (overlay) et le canvas sont redimensionnés pour s'adapter à la taille de l'image de fond.
+                        canvasWidth = imgOriginalWidth;
+                        // Calculer la hauteur du cadre (overlay) si sa largeur est celle de l'image de fond
+                        canvasHeight = canvasWidth / overlayAspectRatio;
+
+                        // L'image de fond est dessinée à sa taille originale, centrée dans le canvas.
+                        imgOffsetX = (canvasWidth - imgOriginalWidth) / 2; // Should be 0 if canvasWidth == imgOriginalWidth
+                        imgOffsetY = (canvasHeight - imgOriginalHeight) / 2; // Center vertically
 
                     } else { // Le calque est paysage (largeur > hauteur)
-                        // L'image de fond doit S'INSERER ENTIEREMENT dans le cadre (contenir), avec des bandes blanches si nécessaire
-                        // On s'assure que la dimension la plus grande de l'image de fond s'insère dans la dimension correspondante du canvas
-                        if (imgAspectRatio > canvas.width / canvas.height) { // Image plus large que le canvas (relativement)
-                            imgDrawWidth = canvas.width;
-                            imgDrawHeight = canvas.width / imgAspectRatio;
-                        } else { // Image plus haute que le canvas (relativement) ou même ratio
-                            imgDrawHeight = canvas.height;
-                            imgDrawWidth = canvas.height * imgAspectRatio;
-                        }
-                        imgOffsetX = (canvas.width - imgDrawWidth) / 2;
-                        imgOffsetY = (canvas.height - imgDrawHeight) / 2;
+                        // L'image de fond reste à sa taille originale.
+                        // Le cadre (overlay) et le canvas sont redimensionnés pour s'adapter à la taille de l'image de fond.
+                        canvasWidth = imgOriginalWidth;
+                        // Calculer la hauteur du cadre (overlay) si sa largeur est celle de l'image de fond
+                        canvasHeight = canvasWidth / overlayAspectRatio;
+
+                        // L'image de fond est dessinée à sa taille originale, centrée dans le canvas.
+                        imgOffsetX = (canvasWidth - imgOriginalWidth) / 2; // Should be 0 if canvasWidth == imgOriginalWidth
+                        imgOffsetY = (canvasHeight - imgOriginalHeight) / 2; // Center vertically
                     }
 
-                    // Dessiner l'image de fond (elle sera recadrée ou aura des bandes blanches selon la logique ci-dessus)
-                    ctx.drawImage(img, imgOffsetX, imgOffsetY, imgDrawWidth, imgDrawHeight);
+                    // Appliquer les dimensions calculées au canvas
+                    canvas.width = canvasWidth;
+                    canvas.height = canvasHeight;
 
-                    // Dessiner le calque (overlay) par-dessus, à la taille exacte du canvas
+                    // Remplir le nouveau canvas avec du blanc avant de dessiner quoi que ce soit
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                    // Dessiner l'image de fond
+                    ctx.drawImage(img, imgOffsetX, imgOffsetY, imgOriginalWidth, imgOriginalHeight);
+
+                    // Dessiner le calque (overlay) par-dessus, redimensionné pour remplir le nouveau canvas
                     ctx.drawImage(overlayImage, 0, 0, canvas.width, canvas.height);
-                    // *** FIN DE LA MODIFICATION POUR LA SECTION VINTED MERGE ***
 
                     canvas.toBlob((blob) => {
                         mergedImageBlobs.push({ blob: blob, name: `${file.name.substring(0, file.name.lastIndexOf('.')) || file.name}-sinmerge.png` });
@@ -494,10 +491,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 totalHeight = Math.max(...chunkImages.map(img => img.naturalHeight));
             }
 
-            // Vérification des dimensions limites (facultatif mais recommandé pour un débogage fin)
-            // console.log(`Partie ${partNumber}: Dimensions du canvas [${totalWidth}x${totalHeight}]`);
-            // Note: Les limites varient par navigateur, mais dépasser 32767px ou 268 millions de pixels peut poser problème.
-
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
 
@@ -521,11 +514,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     ctx.drawImage(img, currentX, offsetY);
                     currentX += img.naturalWidth;
                 }
-                // L'URL de l'objet est révoquée après le dessin pour chaque image chargée via createObjectURL
-                // Cela est important pour la gestion de la mémoire, mais doit être fait une fois que l'image
-                // a été copiée sur le canvas.
-                // Note: allLoadedImages contient les objets Image, pas les URL directement ici
-                // La révocation se fera plus tard pour toutes les images.
             });
 
             // Générer l'image fusionnée pour cette partie
@@ -559,7 +547,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // --- NOUVEAU : Révoquer toutes les URL d'objet après que toutes les images ont été traitées ---
-        // Il est crucial de faire ça après que toutes les images ont été dessinées sur tous les canvas et que les blobs sont créés.
         allLoadedImages.forEach(img => URL.revokeObjectURL(img.src));
 
 
