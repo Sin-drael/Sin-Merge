@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // NOUVEAU : Références aux éléments de la barre de chargement SPECIFIQUES à la fusion Manhwa
     const manhwaLoadingBarContainer = document.getElementById('manhwaLoadingBarContainer');
     const manhwaLoadingBar = document.getElementById('manhwaLoadingBar');
-    const manhwaZipLoadingMessage = document = document.getElementById('manhwaZipLoadingMessage');
+    const manhwaZipLoadingMessage = document.getElementById('manhwaZipLoadingMessage');
 
     // NOUVEAU : Référence au bouton Reset Manhwa
     const resetManhwaButton = document.getElementById('resetManhwaButton');
