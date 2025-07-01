@@ -41,6 +41,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const manhwaStatusMessage = document.getElementById('manhwaStatusMessage');
     const manhwaDownloadLinkContainer = document.getElementById('manhwaDownloadLink');
 
+    // DEPLACEMENT DE LA DECLARATION : Assure que mergeManhwaButton est défini dès le début
+    const mergeManhwaButton = document.getElementById('mergeManhwaButton');
+
+
     let manhwaImageFiles = [];
     let mergeOrientation = 'vertical'; // Par défaut, la fusion est verticale
 
@@ -302,7 +306,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     canvas.toBlob((blob) => {
                         mergedImageBlobs.push({ blob: blob, name: `${file.name.substring(0, file.name.lastIndexOf('.')) || file.name}-sinmerge.png` });
-                        
+
                         const url = URL.createObjectURL(blob);
                         const downloadLink = document.createElement('a');
                         downloadLink.href = url;
@@ -343,9 +347,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Remarque : la fonction `mergeManhwaImages` sera ajoutée dans une étape ultérieure
-    const mergeManhwaButton = document.getElementById('mergeManhwaButton'); // Déclaration manquante
-    mergeManhwaButton.addEventListener('click', mergeManhwaImages);
+    // L'écouteur pour mergeManhwaButton est commenté car la fonction mergeManhwaImages est définie plus bas.
+    // Il sera réactivé une fois que la fonction mergeManhwaImages sera pleinement fonctionnelle.
+    // mergeManhwaButton.addEventListener('click', mergeManhwaImages); // COMMENTE TEMPORAIREMENT
     resetManhwaButton.addEventListener('click', resetManhwaImages);
 
     // Gérer le clic sur le bouton "Télécharger tout (Zip)"
