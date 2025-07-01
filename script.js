@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const manhwaImagesInput = document.getElementById('manhwaImagesInput');
     const selectManhwaImagesButton = document.getElementById('selectManhwaImagesButton');
     const manhwaImagesFileNames = document.getElementById('manhwaImagesFileNames');
-    const manhwaImagesPreview = document.getElementById('manhwaImagesPreview'); // Correction ici
+    const manhwaImagesPreview = document.getElementById('manhwaImagesPreview');
     const orientationHorizontalButton = document.getElementById('orientationHorizontal');
     const orientationVerticalButton = document.getElementById('orientationVertical');
 
@@ -249,38 +249,57 @@ document.addEventListener('DOMContentLoaded', () => {
             await new Promise(resolve => {
                 img.onload = () => {
                     // *** DÉBUT DE LA MODIFICATION POUR LA SECTION VINTED MERGE ***
-                    // Le canvas prend les dimensions du calque (overlay)
+                    // Le canvas prend toujours les dimensions du calque (overlay)
                     canvas.width = overlayImage.naturalWidth;
                     canvas.height = overlayImage.naturalHeight;
 
-                    // Remplir le canvas avec du blanc
+                    // Remplir le canvas avec du blanc avant de dessiner quoi que ce soit
                     ctx.fillStyle = '#FFFFFF';
                     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-                    // --- Dessin de l'image de fond (centrée et contenue dans le canvas) ---
                     const imgOriginalWidth = img.naturalWidth;
                     const imgOriginalHeight = img.naturalHeight;
                     const imgAspectRatio = imgOriginalWidth / imgOriginalHeight;
-                    const canvasAspectRatio = canvas.width / canvas.height;
+
+                    const overlayAspectRatio = overlayImage.naturalWidth / overlayImage.naturalHeight;
 
                     let imgDrawWidth;
                     let imgDrawHeight;
                     let imgOffsetX = 0;
                     let imgOffsetY = 0;
 
-                    // Calculer les dimensions de dessin pour que l'image de fond soit contenue et centrée
-                    if (imgAspectRatio > canvasAspectRatio) { // L'image est proportionnellement plus large que le cadre
-                        imgDrawWidth = canvas.width;
-                        imgDrawHeight = canvas.width / imgAspectRatio;
-                        imgOffsetY = (canvas.height - imgDrawHeight) / 2; // Centrer verticalement
-                    } else { // L'image est proportionnellement plus haute ou a le même ratio que le cadre
-                        imgDrawHeight = canvas.height;
-                        imgDrawWidth = canvas.height * imgAspectRatio;
-                        imgOffsetX = (canvas.width - imgDrawWidth) / 2; // Centrer horizontalement
+                    // Logique conditionnelle basée sur l'orientation du CALQUE (overlay)
+                    if (overlayAspectRatio <= 1) { // Le calque est portrait (hauteur >= largeur) ou carré
+                        // L'image de fond doit REMPLIR le cadre (couvrir), quitte à être recadrée
+                        // On s'assure que la dimension la plus petite de l'image de fond remplit la dimension correspondante du canvas
+                        if (imgAspectRatio > canvas.width / canvas.height) { // Image plus large que le canvas (relativement)
+                            imgDrawHeight = canvas.height;
+                            imgDrawWidth = canvas.height * imgAspectRatio;
+                        } else { // Image plus haute que le canvas (relativement) ou même ratio
+                            imgDrawWidth = canvas.width;
+                            imgDrawHeight = canvas.width / imgAspectRatio;
+                        }
+                        imgOffsetX = (canvas.width - imgDrawWidth) / 2;
+                        imgOffsetY = (canvas.height - imgDrawHeight) / 2;
+
+                    } else { // Le calque est paysage (largeur > hauteur)
+                        // L'image de fond doit S'INSERER ENTIEREMENT dans le cadre (contenir), avec des bandes blanches si nécessaire
+                        // On s'assure que la dimension la plus grande de l'image de fond s'insère dans la dimension correspondante du canvas
+                        if (imgAspectRatio > canvas.width / canvas.height) { // Image plus large que le canvas (relativement)
+                            imgDrawWidth = canvas.width;
+                            imgDrawHeight = canvas.width / imgAspectRatio;
+                        } else { // Image plus haute que le canvas (relativement) ou même ratio
+                            imgDrawHeight = canvas.height;
+                            imgDrawWidth = canvas.height * imgAspectRatio;
+                        }
+                        imgOffsetX = (canvas.width - imgDrawWidth) / 2;
+                        imgOffsetY = (canvas.height - imgDrawHeight) / 2;
                     }
+
+                    // Dessiner l'image de fond (elle sera recadrée ou aura des bandes blanches selon la logique ci-dessus)
                     ctx.drawImage(img, imgOffsetX, imgOffsetY, imgDrawWidth, imgDrawHeight);
 
-                    // --- Dessin du calque (overlay) par-dessus, à la taille exacte du canvas ---
+                    // Dessiner le calque (overlay) par-dessus, à la taille exacte du canvas
                     ctx.drawImage(overlayImage, 0, 0, canvas.width, canvas.height);
                     // *** FIN DE LA MODIFICATION POUR LA SECTION VINTED MERGE ***
 
