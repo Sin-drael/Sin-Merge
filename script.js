@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Éléments spécifiques à la section Manhwa Fusion ---
     const manhwaImagesInput = document.getElementById('manhwaImagesInput');
-    const selectManhwaImagesButton = document.getElementById('selectManhwaImagesButton');
+    const selectManhwaImagesButton = document.getElementById('selectManhwaImagesButton'); // C'était la ligne manquante !
     const manhwaImagesFileNames = document.getElementById('manhwaImagesFileNames');
     const manhwaImagesPreview = document.getElementById('manhwaImagesPreview');
     const orientationHorizontalButton = document.getElementById('orientationHorizontal');
@@ -347,6 +347,67 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Écouteur pour le bouton de sélection des images Manhwa
+    selectManhwaImagesButton.addEventListener('click', () => {
+        manhwaImagesInput.click();
+    });
+
+    manhwaImagesInput.addEventListener('change', (event) => {
+        const newFiles = Array.from(event.target.files).filter(file => file.type.startsWith('image/'));
+        const uniqueFiles = new Map();
+        manhwaImageFiles.forEach(file => {
+            uniqueFiles.set(`${file.name}-${file.size}-${file.lastModified}`, file);
+        });
+        newFiles.forEach(file => {
+            uniqueFiles.set(`${file.name}-${file.size}-${file.lastModified}`, file);
+        });
+        manhwaImageFiles = Array.from(uniqueFiles.values());
+
+        manhwaImagesPreview.innerHTML = '';
+        if (manhwaImageFiles.length > 0) {
+            if (manhwaImageFiles.length === 1) {
+                manhwaImagesFileNames.textContent = manhwaImageFiles[0].name;
+            } else {
+                manhwaImagesFileNames.textContent = `${manhwaImageFiles.length} fichiers sélectionnés.`;
+            }
+
+            manhwaImageFiles.forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.classList.add('w-24', 'h-24', 'object-cover', 'rounded-md', 'shadow-sm');
+                    manhwaImagesPreview.appendChild(img);
+                };
+                reader.readAsDataURL(file);
+            });
+        } else {
+            manhwaImagesFileNames.textContent = 'Aucun fichier sélectionné.';
+            manhwaImagesPreview.innerHTML = '<span class="text-gray-400">Aperçu des images</span>';
+        }
+        updateManhwaMergeButtonState();
+        event.target.value = ''; // Réinitialise l'input file pour permettre la re-sélection des mêmes fichiers
+    });
+
+    // Gestion des boutons d'orientation
+    orientationVerticalButton.addEventListener('click', () => {
+        mergeOrientation = 'vertical';
+        orientationVerticalButton.classList.remove('bg-gray-200', 'text-gray-700');
+        orientationVerticalButton.classList.add('bg-blue-600', 'text-white');
+        orientationHorizontalButton.classList.remove('bg-blue-600', 'text-white');
+        orientationHorizontalButton.classList.add('bg-gray-200', 'text-gray-700');
+        updateManhwaMergeButtonState();
+    });
+
+    orientationHorizontalButton.addEventListener('click', () => {
+        mergeOrientation = 'horizontal';
+        orientationHorizontalButton.classList.remove('bg-gray-200', 'text-gray-700');
+        orientationHorizontalButton.classList.add('bg-blue-600', 'text-white');
+        orientationVerticalButton.classList.remove('bg-blue-600', 'text-white');
+        orientationVerticalButton.classList.add('bg-gray-200', 'text-gray-700');
+        updateManhwaMergeButtonState();
+    });
+
     resetManhwaButton.addEventListener('click', resetManhwaImages);
 
     // Gérer le clic sur le bouton "Télécharger tout (Zip)"
@@ -432,8 +493,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const allLoadedImages = [];
 
         // --- MODIFICATION ICI : Créer une liste de promesses pour charger toutes les images ---
+        // Utilise Promise.all pour charger toutes les images en parallèle et attendre qu'elles soient toutes prêtes.
         const imageLoadPromises = manhwaImageFiles.map(file => {
-            return new Promise((resolve, reject) => {
+            return new Promise((resolve) => { // Supprime le 'reject' car nous voulons que la promesse résolve même en cas d'erreur de chargement pour ne pas bloquer Promise.all
                 const img = new Image();
                 img.onload = () => {
                     // Stocke l'URL d'objet avec l'image pour la révoquer plus tard
@@ -450,10 +512,11 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
-        // Attendre le chargement de toutes les images
+        // Attendre que toutes les promesses de chargement soient résolues (succès ou échec)
+        const loadedResults = await Promise.all(imageLoadPromises);
+
         let loadedCount = 0;
-        for (const promise of imageLoadPromises) {
-            const img = await promise;
+        for (const img of loadedResults) {
             if (img && img.naturalWidth > 0 && img.naturalHeight > 0) {
                 allLoadedImages.push(img);
             }
@@ -631,14 +694,14 @@ document.addEventListener('DOMContentLoaded', () => {
         manhwaZipLoadingMessage.classList.add('hidden');
         manhwaLoadingBar.style.width = '0%';
     }
-    // MODIFICATION ICI : Activation de l'écouteur du bouton Manhwa
+    // Activation de l'écouteur du bouton Manhwa
     mergeManhwaButton.addEventListener('click', mergeManhwaImages);
 
-    // NOUVEAU : Initialisation: affiche la section "Merge Vinted" par défaut au chargement
+    // Initialisation: affiche la section "Merge Vinted" par défaut au chargement
     showSection(vintedMergerSection);
     updateMergeButtonState(); // S'assure que l'état initial du bouton Vinted est correct
 
-    // --- NOUVEAU : Initialisation de l'état des boutons Manhwa au chargement ---
+    // Initialisation de l'état des boutons Manhwa au chargement
     // Simule un clic sur le bouton Vertical pour définir l'état initial visuel et la variable
     orientationVerticalButton.click();
     updateManhwaMergeButtonState(); // S'assure que le bouton de fusion Manhwa est désactivé si aucune image n'est sélectionnée
