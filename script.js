@@ -269,12 +269,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Logique conditionnelle basée sur l'orientation de l'IMAGE DE FOND
                     // imgAspectRatio <= 1 signifie que l'image de fond est portrait ou carrée
                     if (imgAspectRatio <= 1) { // L'image de fond est portrait (hauteur >= largeur) ou carrée
-                        const MAX_FINAL_WIDTH = 1020; // Nouvelle largeur maximale pour l'image fusionnée finale
+                        const MAX_FINAL_HEIGHT_PORTRAIT = 1020; // Hauteur maximale souhaitée pour l'image fusionnée finale (PORTRAIT)
 
-                        // La largeur finale du canvas DOIT être MAX_FINAL_WIDTH
-                        canvasWidth = MAX_FINAL_WIDTH;
-                        // La hauteur du canvas est déterminée par cette largeur et le ratio du CALQUE (overlay)
-                        canvasHeight = canvasWidth / overlayAspectRatio;
+                        // La hauteur finale du canvas DOIT être MAX_FINAL_HEIGHT_PORTRAIT
+                        canvasHeight = MAX_FINAL_HEIGHT_PORTRAIT;
+                        // La largeur du canvas est déterminée par cette hauteur et le ratio du CALQUE (overlay)
+                        canvasWidth = canvasHeight * overlayAspectRatio;
 
                         // Calcul des dimensions de l'image de fond pour qu'elle soit CONTENUE dans le nouveau canvas
                         // et conserve ses propres proportions.
@@ -283,12 +283,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         imgDrawHeight = imgOriginalHeight * scale;
 
                         // Centrage de l'image de fond dans le canevas
-                        // Il y aura des bandes blanches si l'image de fond est plus "haute" que le canevas final
+                        // Il y aura des bandes blanches si l'image de fond est plus "large" que le canevas final
                         imgOffsetX = (canvasWidth - imgDrawWidth) / 2;
                         imgOffsetY = (canvasHeight - imgDrawHeight) / 2;
 
                     } else { // L'image de fond est paysage (largeur > hauteur)
-                        const MAX_FINAL_HEIGHT = 1020; // Hauteur maximale souhaitée pour l'image fusionnée finale
+                        const MAX_FINAL_HEIGHT = 1020; // Hauteur maximale souhaitée pour l'image fusionnée finale (PAYSAGE)
 
                         // La hauteur finale du canvas DOIT être MAX_FINAL_HEIGHT
                         canvasHeight = MAX_FINAL_HEIGHT;
