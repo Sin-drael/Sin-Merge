@@ -565,16 +565,25 @@ document.addEventListener('DOMContentLoaded', () => {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
 
-        // Boucle pour traiter les images par chunks
-        while (currentImageIndex < allLoadedImages.length) {
-            const chunkImages = allLoadedImages.slice(currentImageIndex, currentImageIndex + MAX_IMAGES_PER_CHUNK);
+        // NOUVELLE LOGIQUE POUR LE CHUNK ADAPTATIF
+    let currentChunkSize = MAX_IMAGES_PER_CHUNK; // Commencez avec la taille max par défaut (votre 50)
 
-            if (chunkImages.length === 0) break;
+    while (currentImageIndex < allLoadedImages.length) {
+        let success = false;
+        // Boucle interne pour réessayer avec des tailles de chunk réduites
+        while (!success && currentChunkSize >= 1) {
+            // Sélectionne un chunk d'images basé sur la taille actuelle du chunk
+            const chunkImages = allLoadedImages.slice(currentImageIndex, currentImageIndex + currentChunkSize);
+
+            if (chunkImages.length === 0) {
+                 success = true; // Pas d'images à traiter dans ce segment
+                 break;
+            }
 
             let totalWidth = 0;
             let totalHeight = 0;
 
-            // Calculer les dimensions du canvas pour le chunk actuel
+            // Calcul des dimensions du canvas pour le chunk actuel
             if (mergeOrientation === 'vertical') {
                 totalWidth = Math.max(...chunkImages.map(img => img.naturalWidth));
                 totalHeight = chunkImages.reduce((sum, img) => sum + img.naturalHeight, 0);
@@ -583,11 +592,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 totalHeight = Math.max(...chunkImages.map(img => img.naturalHeight));
             }
 
+            // Applique les dimensions calculées au canvas
             canvas.width = totalWidth;
             canvas.height = totalHeight;
 
-            ctx.fillStyle = '#FFFFFF'; // Définir un fond blanc par défaut
-            ctx.fillRect(0, 0, canvas.width, canvas.height); // Remplir le fond
+            // Remplir le fond du canvas avec du blanc
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             let currentX = 0;
             let currentY = 0;
@@ -595,44 +606,68 @@ document.addEventListener('DOMContentLoaded', () => {
             // Dessiner les images du chunk sur le canvas
             chunkImages.forEach(img => {
                 if (mergeOrientation === 'vertical') {
+                    // Centrage horizontal pour les images individuelles dans le chunk vertical
                     const offsetX = (totalWidth - img.naturalWidth) / 2;
                     ctx.drawImage(img, offsetX, currentY);
                     currentY += img.naturalHeight;
                 } else { // horizontal
+                    // Centrage vertical pour les images individuelles dans le chunk horizontal
                     const offsetY = (totalHeight - img.naturalHeight) / 2;
                     ctx.drawImage(img, currentX, offsetY);
                     currentX += img.naturalWidth;
                 }
             });
 
-            // Générer l'image fusionnée pour cette partie
-            const blob = await new Promise(resolve => {
-                canvas.toBlob((b) => {
-                    resolve(b);
-                }, 'image/png'); // Spécifier le format de sortie
-            });
+            try {
+                // Tente de générer le Blob pour l'image fusionnée du chunk
+                const blob = await new Promise(resolve => {
+                    // Utilise setTimeout pour décharger la tâche du thread principal,
+                    // ce qui peut aider avec les grandes images en permettant au navigateur
+                    // de respirer et de potentiellement récupérer de la mémoire.
+                    setTimeout(() => {
+                        canvas.toBlob((b) => {
+                            resolve(b);
+                        }, 'image/png');
+                    }, 0); // Exécute dès que possible après le thread principal
+                });
 
-            if (!blob) {
-                manhwaStatusMessage.textContent = `Erreur lors de la génération de la partie ${partNumber} de l'image fusionnée.`;
+                if (blob) {
+                    // Si la génération du blob est un succès
+                    const partFileName = `${String(partNumber).padStart(2, '0')}.png`;
+                    mergedManhwaBlobs.push({ blob: blob, name: partFileName });
+                    currentImageIndex += chunkImages.length; // Avance l'index par le nombre d'images réellement traitées
+                    partNumber++;
+                    success = true; // Indique que ce chunk a été traité avec succès
+                    currentChunkSize = MAX_IMAGES_PER_CHUNK; // Réinitialise la taille du chunk pour le prochain essai (pour maximiser)
+                } else {
+                    // Si toBlob renvoie null, c'est une indication d'échec (souvent mémoire)
+                    throw new Error("Blob generation failed (returned null).");
+                }
+
+            } catch (error) {
+                // En cas d'erreur lors de la génération du blob
+                console.warn(`Tentative de fusion de ${chunkImages.length} images échouée pour la partie ${partNumber}. Réduction du chunk. Erreur:`, error.message);
+                currentChunkSize = Math.floor(currentChunkSize / 2) || 1; // Réduit la taille du chunk de moitié, minimum 1
+                manhwaStatusMessage.textContent = `Taille de fusion réduite à ${currentChunkSize}. Réessai...`;
+                // Important: currentImageIndex n'est PAS avancé ici, car nous allons réessayer le même segment avec moins d'images.
+            }
+
+            // Vérifie si la taille du chunk est devenue trop petite (même 1 image ne passe pas)
+            if (!success && currentChunkSize < 1) {
+                manhwaStatusMessage.textContent = `Erreur irrécupérable : impossible de fusionner les images restantes, même individuellement.`;
                 manhwaStatusMessage.classList.add('text-red-500');
                 manhwaLoadingBarContainer.classList.add('hidden');
                 manhwaZipLoadingMessage.classList.add('hidden');
-                // Révoquer les URL des images chargées car on quitte la fonction avec une erreur
-                allLoadedImages.forEach(img => URL.revokeObjectURL(img._objectURL)); // Utilise la propriété stockée
-                return;
+                // Révoque les URL des images chargées car on quitte la fonction avec une erreur
+                allLoadedImages.forEach(img => URL.revokeObjectURL(img._objectURL));
+                return; // Sort de la fonction
             }
-
-            const partFileName = `${String(partNumber).padStart(2, '0')}.png`;
-            mergedManhwaBlobs.push({ blob: blob, name: partFileName });
-
-            currentImageIndex += MAX_IMAGES_PER_CHUNK;
-            partNumber++;
-
-            // Mettre à jour la barre de progression pour la fusion des parties
-            const fusionProgress = (currentImageIndex / allLoadedImages.length) * 100;
-            manhwaLoadingBar.style.width = `${fusionProgress.toFixed(2)}%`;
-            manhwaZipLoadingMessage.textContent = `Fusion des parties : ${Math.min(currentImageIndex, allLoadedImages.length)}/${allLoadedImages.length} images traitées (${fusionProgress.toFixed(0)}%)`;
         }
+        // Mise à jour de la progression globale après chaque tentative réussie d'un chunk
+        const fusionProgress = (currentImageIndex / allLoadedImages.length) * 100;
+        manhwaLoadingBar.style.width = `${fusionProgress.toFixed(2)}%`;
+        manhwaZipLoadingMessage.textContent = `Fusion des parties : ${currentImageIndex}/${allLoadedImages.length} images traitées (${fusionProgress.toFixed(0)}%)`;
+    }
 
         // --- MODIFICATION MAJEURE ICI : Révoquer toutes les URL d'objet APRES que toutes les fusions sont terminées ---
         allLoadedImages.forEach(img => {
