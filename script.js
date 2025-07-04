@@ -269,25 +269,35 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Logique conditionnelle basée sur l'orientation de l'IMAGE DE FOND
                     // imgAspectRatio <= 1 signifie que l'image de fond est portrait ou carrée
                     if (imgAspectRatio <= 1) { // L'image de fond est portrait (hauteur >= largeur) ou carrée
-                        // Si l'image de fond est portrait, le cadre prend EXACTEMENT les dimensions de l'image de fond.
+                        // Pour les images portrait/carrées, on garde les dimensions originales.
+                        // (Le problème de hauteur n'est pas censé se poser ici selon votre description)
                         canvasWidth = imgOriginalWidth;
                         canvasHeight = imgOriginalHeight;
 
                         // L'image de fond est dessinée à sa taille originale, elle remplira le canvas.
                         imgOffsetX = 0;
                         imgOffsetY = 0;
+                        imgDrawWidth = imgOriginalWidth; // Ajout pour clarté, pas strictement nécessaire si non modifié
+                        imgDrawHeight = imgOriginalHeight; // Ajout pour clarté, pas strictement nécessaire si non modifié
 
                     } else { // L'image de fond est paysage (largeur > hauteur)
-                        // Si l'image de fond est paysage, le cadre prend la largeur de l'image de fond,
-                        // et sa hauteur est calculée pour maintenir les proportions du CALQUE (overlay).
-                        canvasWidth = imgOriginalWidth;
-                        // Calcul de la hauteur du cadre pour rester proportionnel au CALQUE (overlay)
-                        canvasHeight = canvasWidth / overlayAspectRatio;
+                        const MAX_FINAL_HEIGHT = 1020; // Hauteur maximale souhaitée pour l'image fusionnée finale
 
-                        // L'image de fond est dessinée à sa taille originale, centrée dans le cadre redimensionné.
-                        // Il y aura des bandes blanches en haut et en bas si l'image de fond est moins "haute" que le cadre.
-                        imgOffsetX = (canvasWidth - imgOriginalWidth) / 2; // Sera 0 si canvasWidth == imgOriginalWidth
-                        imgOffsetY = (canvasHeight - imgOriginalHeight) / 2; // Centrage vertical
+                        // La hauteur finale du canvas DOIT être MAX_FINAL_HEIGHT
+                        canvasHeight = MAX_FINAL_HEIGHT;
+                        // La largeur du canvas est déterminée par cette hauteur et le ratio du CALQUE (overlay)
+                        canvasWidth = canvasHeight * overlayAspectRatio;
+
+                        // Calcul des dimensions de l'image de fond pour qu'elle soit CONTENUE dans le nouveau canvas
+                        // et conserve ses propres proportions.
+                        let scale = Math.min(canvasWidth / imgOriginalWidth, canvasHeight / imgOriginalHeight);
+                        imgDrawWidth = imgOriginalWidth * scale;
+                        imgDrawHeight = imgOriginalHeight * scale;
+
+                        // Centrage de l'image de fond dans le canevas
+                        // Il y aura des bandes blanches si l'image de fond est plus "large" que le canevas final
+                        imgOffsetX = (canvasWidth - imgDrawWidth) / 2;
+                        imgOffsetY = (canvasHeight - imgDrawHeight) / 2;
                     }
 
                     // Appliquer les dimensions calculées au canvas
@@ -298,8 +308,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     ctx.fillStyle = '#FFFFFF';
                     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-                    // Dessiner l'image de fond
-                    ctx.drawImage(img, imgOffsetX, imgOffsetY, imgOriginalWidth, imgOriginalHeight);
+                    // Dessiner l'image de fond avec les dimensions potentiellement ajustées (imgDrawWidth/Height)
+                    ctx.drawImage(img, imgOffsetX, imgOffsetY, imgDrawWidth, imgDrawHeight);
 
                     // Dessiner le calque (overlay) par-dessus, redimensionné pour remplir le nouveau canvas
                     ctx.drawImage(overlayImage, 0, 0, canvas.width, canvas.height);
