@@ -269,16 +269,23 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Logique conditionnelle basée sur l'orientation de l'IMAGE DE FOND
                     // imgAspectRatio <= 1 signifie que l'image de fond est portrait ou carrée
                     if (imgAspectRatio <= 1) { // L'image de fond est portrait (hauteur >= largeur) ou carrée
-                        // Pour les images portrait/carrées, on garde les dimensions originales.
-                        // (Le problème de hauteur n'est pas censé se poser ici selon votre description)
-                        canvasWidth = imgOriginalWidth;
-                        canvasHeight = imgOriginalHeight;
+                        const MAX_FINAL_WIDTH = 1020; // Nouvelle largeur maximale pour l'image fusionnée finale
 
-                        // L'image de fond est dessinée à sa taille originale, elle remplira le canvas.
-                        imgOffsetX = 0;
-                        imgOffsetY = 0;
-                        imgDrawWidth = imgOriginalWidth; // Ajout pour clarté, pas strictement nécessaire si non modifié
-                        imgDrawHeight = imgOriginalHeight; // Ajout pour clarté, pas strictement nécessaire si non modifié
+                        // La largeur finale du canvas DOIT être MAX_FINAL_WIDTH
+                        canvasWidth = MAX_FINAL_WIDTH;
+                        // La hauteur du canvas est déterminée par cette largeur et le ratio du CALQUE (overlay)
+                        canvasHeight = canvasWidth / overlayAspectRatio;
+
+                        // Calcul des dimensions de l'image de fond pour qu'elle soit CONTENUE dans le nouveau canvas
+                        // et conserve ses propres proportions.
+                        let scale = Math.min(canvasWidth / imgOriginalWidth, canvasHeight / imgOriginalHeight);
+                        imgDrawWidth = imgOriginalWidth * scale;
+                        imgDrawHeight = imgOriginalHeight * scale;
+
+                        // Centrage de l'image de fond dans le canevas
+                        // Il y aura des bandes blanches si l'image de fond est plus "haute" que le canevas final
+                        imgOffsetX = (canvasWidth - imgDrawWidth) / 2;
+                        imgOffsetY = (canvasHeight - imgDrawHeight) / 2;
 
                     } else { // L'image de fond est paysage (largeur > hauteur)
                         const MAX_FINAL_HEIGHT = 1020; // Hauteur maximale souhaitée pour l'image fusionnée finale
