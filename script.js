@@ -591,14 +591,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 totalWidth = chunkImages.reduce((sum, img) => sum + img.naturalWidth, 0);
                 totalHeight = Math.max(...chunkImages.map(img => img.naturalHeight));
             }
+            
+// Applique les dimensions calculées au canvas
+        canvas.width = totalWidth;
+        canvas.height = totalHeight;
 
-            // Applique les dimensions calculées au canvas
-            canvas.width = totalWidth;
-            canvas.height = totalHeight;
+        // Effacer entièrement le contenu précédent du canvas.
+        // Cela est crucial si une opération précédente a échoué ou laissé le canvas dans un état non propre.
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Remplir le fond du canvas avec du blanc
-            ctx.fillStyle = '#FFFFFF';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        // Remplir le fond du canvas avec du blanc
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             let currentX = 0;
             let currentY = 0;
