@@ -383,9 +383,33 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     manhwaImageFiles = Array.from(uniqueFiles.values());
+    manhwaImageFiles.sort((a, b) => {
+        const nameA = a.name;
+        const nameB = b.name;
 
-    // --- MODIFICATION ICI : Tri alphanumérique naturel avancé ---
-    manhwaImageFiles.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' })); 
+        // Fonction pour extraire le premier nombre d'une chaîne
+        const extractNumber = (str) => {
+            const match = str.match(/\d+/);
+            return match ? parseInt(match[0], 10) : NaN; // Retourne le nombre ou NaN si aucun nombre n'est trouvé
+        };
+
+        const numA = extractNumber(nameA);
+        const numB = extractNumber(nameB);
+
+        // Si les deux noms contiennent des nombres valides, on les compare numériquement
+        if (!isNaN(numA) && !isNaN(numB)) {
+            if (numA !== numB) {
+                return numA - numB;
+            }
+            // Si les nombres sont identiques (ex: "image1.jpg" et "image1_bis.jpg"),
+            // on fait un tri alphabétique pour départager.
+            return nameA.localeCompare(nameB, undefined, { sensitivity: 'base' });
+        }
+
+        // Si l'un des noms n'a pas de nombre, ou si l'extraction échoue,
+        // on revient à un tri alphabétique simple.
+        return nameA.localeCompare(nameB, undefined, { sensitivity: 'base' });
+    });
     manhwaImagesPreview.innerHTML = ''; // Nettoie l'aperçu existant
 
     if (manhwaImageFiles.length > 0) {
