@@ -385,42 +385,7 @@ document.addEventListener('DOMContentLoaded', () => {
     manhwaImageFiles = Array.from(uniqueFiles.values());
 
     // --- MODIFICATION ICI : Tri alphanumérique naturel avancé ---
-    manhwaImageFiles.sort((a, b) => {
-        // Fonction utilitaire pour extraire les parties (textes et nombres)
-        const getParts = (s) => {
-            return s.split(/(\d+)/).filter(Boolean).map(part => {
-                const num = parseInt(part, 10);
-                return isNaN(num) ? part : num;
-            });
-        };
-
-        const partsA = getParts(a.name);
-        const partsB = getParts(b.name);
-
-        for (let i = 0; i < Math.min(partsA.length, partsB.length); i++) {
-            const partA = partsA[i];
-            const partB = partsB[i];
-
-            if (typeof partA === 'number' && typeof partB === 'number') {
-                // Si ce sont des nombres, comparez-les numériquement
-                if (partA !== partB) {
-                    return partA - partB;
-                }
-            } else {
-                // Sinon, comparez-les comme des chaînes de caractères
-                const comparison = String(partA).localeCompare(String(partB));
-                if (comparison !== 0) {
-                    return comparison;
-                }
-            }
-        }
-
-        // Si toutes les parties sont égales jusqu'à la longueur la plus courte,
-        // celui qui a plus de parties restantes est considéré comme "plus grand".
-        return partsA.length - partsB.length;
-    });
-    // --- FIN DE LA MODIFICATION ---
-
+    manhwaImageFiles.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' })); 
     manhwaImagesPreview.innerHTML = ''; // Nettoie l'aperçu existant
 
     if (manhwaImageFiles.length > 0) {
