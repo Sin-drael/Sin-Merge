@@ -375,51 +375,56 @@ document.addEventListener('DOMContentLoaded', () => {
     const newFiles = Array.from(event.target.files).filter(file => file.type.startsWith('image/'));
     const uniqueFiles = new Map();
 
+    // Lors de l'ajout de nouveaux fichiers, on s'assure de les stocker correctement
+    // en tant qu'objets File (et non des wrappers si la tentative précédente a été revertie)
     manhwaImageFiles.forEach(file => {
-        // Conserver le nom original pour l'affichage, mais stocker un nom "triable" si besoin
-        uniqueFiles.set(`${file.originalName || file.name}-${file.size}-${file.lastModified}`, file);
+        // La clé doit être basée sur les propriétés uniques du fichier original
+        uniqueFiles.set(`${file.name}-${file.size}-${file.lastModified}`, file);
     });
-
     newFiles.forEach(file => {
-        // --- NOUVELLE LOGIQUE DE NORMALISATION DU NOM POUR LE TRI ---
-        let processedFileName = file.name;
-        // Regex pour trouver le nom de base du fichier sans l'extension
-        const baseNameMatch = file.name.match(/^(\d+)(\..+)$/); // Capture le nombre et l'extension
-
-        if (baseNameMatch && baseNameMatch[1].length === 1) { // S'il y a un nombre et qu'il est d'un seul chiffre
-            const numberPart = baseNameMatch[1]; // Ex: "2"
-            const extensionPart = baseNameMatch[2]; // Ex: ".jpg"
-            processedFileName = `0${numberPart}${extensionPart}`; // Ex: "02.jpg"
-        }
-        // Pour les noms de fichiers plus complexes (ex: "image_2.jpg"), une regex plus sophistiquée serait nécessaire
-        // Mais pour "nombre.jpg", cette logique est parfaite.
-
-        // Créer une nouvelle 'File' ou un objet similaire avec le nom modifié
-        // Il est important de ne PAS modifier 'file.name' directement sur l'objet File original,
-        // car c'est une propriété en lecture seule.
-        // On va créer un nouvel objet qui contient le fichier original et son nom traité.
-        const fileForProcessing = {
-            originalFile: file, // Garde une référence au fichier original pour le chargement
-            name: processedFileName, // Utilise le nom normalisé pour le tri
-            originalName: file.name, // Garde aussi le nom original si tu veux l'afficher
-            size: file.size,
-            lastModified: file.lastModified,
-            type: file.type
-        };
-        uniqueFiles.set(`${fileForProcessing.name}-${fileForProcessing.size}-${fileForProcessing.lastModified}`, fileForProcessing);
+        uniqueFiles.set(`${file.name}-${file.size}-${file.lastModified}`, file);
     });
 
     manhwaImageFiles = Array.from(uniqueFiles.values());
 
-    // --- LE TRI DEVIENT UN SIMPLE TRI ALPHABÉTIQUE STANDARD ---
-    manhwaImageFiles.sort((a, b) => a.name.localeCompare(b.name));
-    // --- FIN DE LA MODIFICATION ---
+    // --- NOUVEAU BLOC DE TRI NUMÉRIQUE AVANCÉ ET ROBUSTE ---
+    manhwaImageFiles.sort((a, b) => {
+        // Fonction utilitaire pour extraire les nombres d'une chaîne
+        const extractNumbers = (str) => {
+            // Trouve toutes les séquences de chiffres dans la chaîne
+            const matches = str.match(/\d+/g);
+            // Convertit les correspondances en nombres, retourne un tableau vide si aucune
+            return matches ? matches.map(Number) : [];
+        };
+
+        const numbersA = extractNumbers(a.name);
+        const numbersB = extractNumbers(b.name);
+
+        // Compare les nombres extraits séquentiellement
+        for (let i = 0; i < Math.min(numbersA.length, numbersB.length); i++) {
+            if (numbersA[i] !== numbersB[i]) {
+                return numbersA[i] - numbersB[i]; // Compare numériquement
+            }
+        }
+
+        // Si les nombres extraits sont identiques jusqu'à la fin de la séquence la plus courte,
+        // on compare les longueurs des séquences de nombres.
+        if (numbersA.length !== numbersB.length) {
+            return numbersA.length - numbersB.length;
+        }
+
+        // Si toutes les séquences numériques sont identiques, on fallback sur un tri alphabétique
+        // pour gérer les parties non numériques ou les noms de fichiers complexes.
+        return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
+    });
+    // --- FIN DU BLOC DE TRI ---
+
 
     manhwaImagesPreview.innerHTML = ''; // Nettoie l'aperçu existant
 
     if (manhwaImageFiles.length > 0) {
         if (manhwaImageFiles.length === 1) {
-            manhwaImagesFileNames.textContent = manhwaImageFiles[0].originalName || manhwaImageFiles[0].name;
+            manhwaImagesFileNames.textContent = manhwaImageFiles[0].name;
         } else {
             manhwaImagesFileNames.textContent = `${manhwaImageFiles.length} fichiers sélectionnés.`;
         }
@@ -427,7 +432,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const gridContainer = document.createElement('div');
         gridContainer.classList.add('grid', 'grid-cols-1', 'sm:grid-cols-2', 'lg:grid-cols-3', 'gap-4');
 
-        manhwaImageFiles.forEach(fileObject => { // ATTENTION: maintenant 'fileObject' est un objet personnalisé
+        manhwaImageFiles.forEach(file => { // Ici 'file' est l'objet File original
             const reader = new FileReader();
             reader.onload = (e) => {
                 const li = document.createElement('li');
@@ -436,12 +441,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const img = document.createElement('img');
                 img.src = e.target.result;
                 img.classList.add('w-16', 'h-16', 'object-cover', 'rounded-md', 'flex-shrink-0');
-                // Utilise le nom original pour le tooltip si disponible, sinon le nom traité
-                img.title = fileObject.originalName || fileObject.name;
+                img.title = file.name; // Le nom original est utilisé pour le tooltip
 
                 const fileNameSpan = document.createElement('span');
-                // Affiche toujours le nom original à l'utilisateur
-                fileNameSpan.textContent = fileObject.originalName || fileObject.name;
+                fileNameSpan.textContent = file.name; // Le nom original est affiché
                 fileNameSpan.classList.add('text-gray-800', 'font-medium', 'break-all');
 
                 li.appendChild(img);
@@ -453,8 +456,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     manhwaImagesPreview.appendChild(gridContainer);
                 }
             };
-            // Très important: FileReader lit le fichier ORIGINAL
-            reader.readAsDataURL(fileObject.originalFile);
+            reader.readAsDataURL(file); // Lire l'objet File original
         });
     } else {
         manhwaImagesFileNames.textContent = 'Aucun fichier sélectionné.';
