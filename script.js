@@ -372,42 +372,69 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     manhwaImagesInput.addEventListener('change', (event) => {
-        const newFiles = Array.from(event.target.files).filter(file => file.type.startsWith('image/'));
-        const uniqueFiles = new Map();
-        manhwaImageFiles.forEach(file => {
-            uniqueFiles.set(`${file.name}-${file.size}-${file.lastModified}`, file);
-        });
-        newFiles.forEach(file => {
-            uniqueFiles.set(`${file.name}-${file.size}-${file.lastModified}`, file);
-        });
-        manhwaImageFiles = Array.from(uniqueFiles.values());
+    const newFiles = Array.from(event.target.files).filter(file => file.type.startsWith('image/'));
+    const uniqueFiles = new Map();
 
-        manhwaImagesPreview.innerHTML = '';
-        if (manhwaImageFiles.length > 0) {
-            if (manhwaImageFiles.length === 1) {
-                manhwaImagesFileNames.textContent = manhwaImageFiles[0].name;
-            } else {
-                manhwaImagesFileNames.textContent = `${manhwaImageFiles.length} fichiers sélectionnés.`;
-            }
-
-            manhwaImageFiles.forEach(file => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const img = document.createElement('img');
-                    img.src = e.target.result;
-                    img.classList.add('w-24', 'h-24', 'object-cover', 'rounded-md', 'shadow-sm');
-                    img.title = file.name;
-                    manhwaImagesPreview.appendChild(img);
-                };
-                reader.readAsDataURL(file);
-            });
-        } else {
-            manhwaImagesFileNames.textContent = 'Aucun fichier sélectionné.';
-            manhwaImagesPreview.innerHTML = '<span class="text-gray-400">Aperçu des images</span>';
-        }
-        updateManhwaMergeButtonState();
-        event.target.value = ''; // Réinitialise l'input file pour permettre la re-sélection des mêmes fichiers
+    // Conserver les fichiers existants et ajouter les nouveaux fichiers uniques
+    manhwaImageFiles.forEach(file => {
+        uniqueFiles.set(`${file.name}-${file.size}-${file.lastModified}`, file);
     });
+    newFiles.forEach(file => {
+        uniqueFiles.set(`${file.name}-${file.size}-${file.lastModified}`, file);
+    });
+
+    manhwaImageFiles = Array.from(uniqueFiles.values());
+
+    // --- NOUVEAU : Tri des fichiers par nom avant l'affichage ---
+    manhwaImageFiles.sort((a, b) => a.name.localeCompare(b.name));
+
+    manhwaImagesPreview.innerHTML = ''; // Nettoie l'aperçu existant
+
+    if (manhwaImageFiles.length > 0) {
+        if (manhwaImageFiles.length === 1) {
+            manhwaImagesFileNames.textContent = manhwaImageFiles[0].name;
+        } else {
+            manhwaImagesFileNames.textContent = `${manhwaImageFiles.length} fichiers sélectionnés.`;
+        }
+
+        // --- NOUVEAU : Création de la liste d'images ---
+        const ul = document.createElement('ul');
+        ul.classList.add('space-y-2'); // Espacement entre les éléments de la liste
+
+        manhwaImageFiles.forEach(file => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const li = document.createElement('li');
+                li.classList.add('flex', 'items-center', 'space-x-4', 'p-2', 'bg-gray-50', 'rounded-md', 'shadow-sm', 'hover:bg-gray-100', 'transition-colors', 'duration-150');
+
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.classList.add('w-16', 'h-16', 'object-cover', 'rounded-md', 'flex-shrink-0'); // Miniature plus petite
+                img.title = file.name; // Garde le tooltip au survol
+
+                const fileNameSpan = document.createElement('span');
+                fileNameSpan.textContent = file.name;
+                fileNameSpan.classList.add('text-gray-800', 'font-medium', 'break-all'); // Pour gérer les noms longs
+
+                li.appendChild(img);
+                li.appendChild(fileNameSpan);
+                ul.appendChild(li);
+
+                // Une fois toutes les images chargées et les LI ajoutés, ajoute le UL au preview
+                // Cela évite de recalculer le DOM trop souvent
+                if (ul.children.length === manhwaImageFiles.length) {
+                    manhwaImagesPreview.appendChild(ul);
+                }
+            };
+            reader.readAsDataURL(file);
+        });
+    } else {
+        manhwaImagesFileNames.textContent = 'Aucun fichier sélectionné.';
+        manhwaImagesPreview.innerHTML = '<span class="text-gray-400">Aperçu des images</span>';
+    }
+    updateManhwaMergeButtonState();
+    event.target.value = ''; // Réinitialise l'input file pour permettre la re-sélection des mêmes fichiers
+});
 
     // Gestion des boutons d'orientation
     orientationVerticalButton.addEventListener('click', () => {
