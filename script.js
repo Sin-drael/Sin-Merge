@@ -32,7 +32,7 @@ const orientationVerticalButton = document.getElementById('orientationVertical')
 const mergeManhwaButton = document.getElementById('mergeManhwaButton');
 const resetManhwaButton = document.getElementById('resetManhwaButton');
 const manhwaStatusMessage = document.getElementById('manhwaStatusMessage');
-const manhwaDownloadLink = document.getElementById('manhwaDownloadLink'); // Corrected ID
+const manhwaDownloadLink = document.getElementById('manhwaDownloadLink');
 const manhwaLoadingBarContainer = document.getElementById('manhwaLoadingBarContainer');
 const manhwaLoadingBar = document.getElementById('manhwaLoadingBar');
 const manhwaZipLoadingMessage = document.getElementById('manhwaZipLoadingMessage');
@@ -363,9 +363,16 @@ manhwaImagesInput.addEventListener('change', (event) => {
 });
 
 
+// Fonction utilitaire pour cacher toutes les barres d'insertion existantes
+function hideAllInsertionBars() {
+    document.querySelectorAll('.insertion-bar').forEach(bar => bar.remove());
+}
+
+
 // --- Fonction pour rafraîchir l'affichage des miniatures Manhwa (avec Drag & Drop) ---
 function displayManhwaImagesPreview() {
     manhwaImagesPreview.innerHTML = ''; // Nettoie l'aperçu existant
+    hideAllInsertionBars(); // Assure que toutes les barres existantes sont retirées
 
     if (manhwaImageFiles.length === 0) {
         manhwaImagesFileNames.textContent = 'Aucun fichier sélectionné.';
@@ -382,16 +389,19 @@ function displayManhwaImagesPreview() {
 
     const gridContainer = document.createElement('div');
     gridContainer.classList.add('grid', 'grid-cols-1', 'sm:grid-cols-2', 'lg:grid-cols-3', 'gap-4');
-    // Ajoute le gridContainer au manhwaImagesPreview ici, immédiatement.
     manhwaImagesPreview.appendChild(gridContainer);
 
-    manhwaImageFiles.forEach((file, index) => { // Ajoute 'index' pour suivre la position
+    manhwaImageFiles.forEach((file, index) => {
         const reader = new FileReader();
         reader.onload = (e) => {
             const li = document.createElement('li');
-            li.classList.add('flex', 'items-center', 'space-x-4', 'p-2', 'bg-gray-50', 'rounded-md', 'shadow-sm', 'hover:bg-gray-100', 'transition-colors', 'duration-150', 'cursor-grab');
+            li.classList.add(
+                'flex', 'items-center', 'space-x-4', 'p-2', 'bg-gray-50', 'rounded-md',
+                'shadow-sm', 'hover:bg-gray-100', 'transition-colors', 'duration-150',
+                'cursor-grab', 'relative'
+            );
             li.setAttribute('draggable', 'true');
-            li.dataset.index = index; // Stocke l'index actuel dans un attribut de données
+            li.dataset.index = index;
 
             const img = document.createElement('img');
             img.src = e.target.result;
@@ -403,65 +413,82 @@ function displayManhwaImagesPreview() {
             fileNameSpan.classList.add('text-gray-800', 'font-medium', 'break-all');
 
             const removeButton = document.createElement('button');
-            removeButton.innerHTML = '&times;'; // Icône "X"
-            removeButton.classList.add('ml-auto', 'text-red-500', 'hover:text-red-700', 'font-bold', 'text-lg', 'p-1', 'rounded-full', 'w-6', 'h-6', 'flex', 'items-center', 'justify-center', 'hover:bg-red-100');
+            removeButton.innerHTML = '&times;';
+            removeButton.classList.add(
+                'ml-auto', 'text-red-500', 'hover:text-red-700', 'font-bold', 'text-lg',
+                'p-1', 'rounded-full', 'w-6', 'h-6', 'flex', 'items-center',
+                'justify-center', 'hover:bg-red-100'
+            );
             removeButton.title = 'Supprimer cette image';
             removeButton.addEventListener('click', () => {
-                // Supprime l'image du tableau manhwaImageFiles
                 manhwaImageFiles.splice(parseInt(li.dataset.index), 1);
-                displayManhwaImagesPreview(); // Re-render l'aperçu
+                displayManhwaImagesPreview();
             });
-
 
             li.appendChild(img);
             li.appendChild(fileNameSpan);
-            li.appendChild(removeButton); // Ajoute le bouton de suppression
+            li.appendChild(removeButton);
 
-            gridContainer.appendChild(li); // Ajoute l'élément li directement au gridContainer
+            gridContainer.appendChild(li);
 
             // --- GESTIONNAIRES D'ÉVÉNEMENTS POUR LE GLISSER-DÉPOSER sur les LI ---
             li.addEventListener('dragstart', (event) => {
                 draggedItem = li;
                 event.dataTransfer.effectAllowed = 'move';
-                event.dataTransfer.setData('text/plain', li.dataset.index); // Stocke l'index de l'élément glissé
-                li.classList.add('opacity-50', 'border-2', 'border-blue-500'); // Visuel pendant le glisser
+                event.dataTransfer.setData('text/plain', li.dataset.index);
+                li.classList.add('opacity-50', 'dashed-border-blue'); // Bordure pointillée pour l'élément glissé
+                hideAllInsertionBars(); // Masquer toutes les barres au début du glisser
             });
 
             li.addEventListener('dragover', (event) => {
-                event.preventDefault(); // Permet le dépôt
+                event.preventDefault();
                 event.dataTransfer.dropEffect = 'move';
-                // Calcul de la moitié pour insérer avant ou après
-                const targetRect = li.getBoundingClientRect();
+
+                hideAllInsertionBars(); // Masque toutes les barres avant d'en créer une nouvelle
+
+                const targetLi = event.currentTarget; // L'élément li que l'on survole
+                const targetRect = targetLi.getBoundingClientRect();
                 const offsetY = event.clientY - targetRect.top;
                 const offsetX = event.clientX - targetRect.left;
 
-                // Nettoie toutes les classes de survol des frères
-                Array.from(li.parentNode.children).forEach(sibling => {
-                    sibling.classList.remove('border-t-4', 'border-b-4', 'border-l-4', 'border-r-4', 'border-blue-300');
-                });
+                const insertionBar = document.createElement('div');
+                insertionBar.classList.add('insertion-bar');
 
+                // Logique pour déterminer où insérer la barre
                 if (mergeOrientation === 'vertical') {
                     if (offsetY < targetRect.height / 2) {
-                        li.classList.add('border-t-4', 'border-blue-300'); // Insérer avant
+                        // Insérer avant (barre en haut)
+                        insertionBar.classList.add('insertion-bar-vertical', 'top-0', 'left-0', 'right-0');
+                        targetLi.prepend(insertionBar); // Ajoute la barre à l'intérieur du li, en haut
                     } else {
-                        li.classList.add('border-b-4', 'border-blue-300'); // Insérer après
+                        // Insérer après (barre en bas)
+                        insertionBar.classList.add('insertion-bar-vertical', 'bottom-0', 'left-0', 'right-0');
+                        targetLi.appendChild(insertionBar); // Ajoute la barre à l'intérieur du li, en bas
                     }
                 } else { // horizontal
                     if (offsetX < targetRect.width / 2) {
-                        li.classList.add('border-l-4', 'border-blue-300'); // Insérer avant
+                        // Insérer avant (barre à gauche)
+                        insertionBar.classList.add('insertion-bar-horizontal', 'top-0', 'bottom-0', 'left-0');
+                        targetLi.prepend(insertionBar); // Ajoute la barre à l'intérieur du li, à gauche
                     } else {
-                        li.classList.add('border-r-4', 'border-blue-300'); // Insérer après
+                        // Insérer après (barre à droite)
+                        insertionBar.classList.add('insertion-bar-horizontal', 'top-0', 'bottom-0', 'right-0');
+                        targetLi.appendChild(insertionBar); // Ajoute la barre à l'intérieur du li, à droite
                     }
                 }
             });
 
-            li.addEventListener('dragleave', () => {
-                li.classList.remove('border-t-4', 'border-b-4', 'border-l-4', 'border-r-4', 'border-blue-300');
+            li.addEventListener('dragleave', (event) => {
+                // Si on quitte l'élément, cacher la barre pour cet élément.
+                // Attention: relatedTarget est l'élément vers lequel la souris se déplace.
+                // Si on passe d'un li à un autre li, dragleave se déclenche sur le premier, puis dragover sur le second.
+                // La fonction hideAllInsertionBars() dans dragover du nouvel élément gérera le nettoyage.
+                // Ici, on ne fait rien pour laisser hideAllInsertionBars() gérer le nettoyage global.
             });
 
             li.addEventListener('drop', (event) => {
                 event.preventDefault();
-                li.classList.remove('border-t-4', 'border-b-4', 'border-l-4', 'border-r-4', 'border-blue-300');
+                hideAllInsertionBars(); // Cacher toutes les barres après le dépôt
 
                 if (draggedItem && draggedItem !== li) {
                     const draggedIndex = parseInt(draggedItem.dataset.index);
@@ -482,58 +509,75 @@ function displayManhwaImagesPreview() {
                         }
                     }
 
-                    // Assure que l'index cible ne dépasse pas la fin du tableau si on glisse vers le bas/droite
+                    // Ajuste l'index pour compenser la suppression de l'élément d'origine
                     if (draggedIndex < targetIndex) {
-                        targetIndex--; // Si on déplace vers la droite/bas, l'élément original est retiré, décalant les indices
+                        targetIndex--;
                     }
+                    if (targetIndex < 0) targetIndex = 0;
+                    if (targetIndex > manhwaImageFiles.length) targetIndex = manhwaImageFiles.length;
+
 
                     // --- MISE À JOUR DE L'ORDRE DANS manhwaImageFiles ---
                     const [movedFile] = manhwaImageFiles.splice(draggedIndex, 1);
                     manhwaImageFiles.splice(targetIndex, 0, movedFile);
 
                     // --- RECONSTRUCTION DE L'AFFICHAGE ENTIER ---
-                    displayManhwaImagesPreview(); // Appelle cette fonction pour reconstruire l'affichage
+                    displayManhwaImagesPreview();
                 }
             });
 
             li.addEventListener('dragend', () => {
-                // Nettoyage de l'élément glissé
                 if (draggedItem) {
-                    draggedItem.classList.remove('opacity-50', 'border-2', 'border-blue-500');
+                    draggedItem.classList.remove('opacity-50', 'dashed-border-blue');
                 }
-                draggedItem = null; // Réinitialise la variable globale
-
-                // Nettoyage de toutes les bordures de survol au cas où dragleave n'ait pas été déclenché
-                document.querySelectorAll('#manhwaImagesPreview li').forEach(item => {
-                    item.classList.remove('border-t-4', 'border-b-4', 'border-l-4', 'border-r-4', 'border-blue-300');
-                });
+                draggedItem = null;
+                hideAllInsertionBars(); // Assure que toutes les barres sont cachées à la fin du glisser
             });
         };
         reader.readAsDataURL(file);
     });
 
     // --- GESTIONNAIRES D'ÉVÉNEMENTS POUR LE GLISSER-DÉPOSER sur le CONTENEUR GLOBAL ---
-    // Ces écouteurs gèrent le cas où l'on dépose un élément en dehors d'une miniature spécifique,
-    // par exemple, pour le placer à la fin de la liste.
     manhwaImagesPreview.addEventListener('dragover', (event) => {
         event.preventDefault();
         event.dataTransfer.dropEffect = 'move';
-        // Ajoute un visuel si on survole la zone vide de l'aperçu
-        if (!event.target.closest('li')) { // Si l'élément survolé n'est pas un 'li'
-            manhwaImagesPreview.classList.add('border-2', 'border-dashed', 'border-blue-300');
+        // Si l'élément survolé n'est pas un 'li' (donc sur l'espace vide du conteneur)
+        if (!event.target.closest('li')) {
+            hideAllInsertionBars(); // Cache toutes les autres barres
+
+            // Crée une barre à la fin ou au début du conteneur s'il est vide
+            const insertionBar = document.createElement('div');
+            insertionBar.classList.add('insertion-bar');
+
+            if (manhwaImageFiles.length === 0) {
+                 // Si pas d'images, la barre sera au centre de la zone de drop pour indiquer qu'on peut déposer
+                insertionBar.classList.add('insertion-bar-empty-container');
+                manhwaImagesPreview.appendChild(insertionBar);
+            } else {
+                // Si des images existent, mais on est sur la zone vide après elles
+                if (mergeOrientation === 'vertical') {
+                    // Pour vertical, on met la barre en bas du dernier élément, ou après les éléments
+                    // C'est un peu plus complexe sans cibler un LI, mais on peut simuler en mettant au bas de l'aperçu
+                    insertionBar.classList.add('insertion-bar-vertical-end');
+                    manhwaImagesPreview.appendChild(insertionBar); // Appendre à la fin du conteneur de preview
+                } else { // horizontal
+                    insertionBar.classList.add('insertion-bar-horizontal-end');
+                    manhwaImagesPreview.appendChild(insertionBar); // Appendre à la fin du conteneur de preview
+                }
+            }
         }
     });
 
     manhwaImagesPreview.addEventListener('dragleave', (event) => {
-        // Ne supprime le style que si on quitte complètement la zone de preview
+        // Si on quitte complètement la zone de preview, cacher toutes les barres
         if (!manhwaImagesPreview.contains(event.relatedTarget)) {
-            manhwaImagesPreview.classList.remove('border-2', 'border-dashed', 'border-blue-300');
+            hideAllInsertionBars();
         }
     });
 
     manhwaImagesPreview.addEventListener('drop', (event) => {
         event.preventDefault();
-        manhwaImagesPreview.classList.remove('border-2', 'border-dashed', 'border-blue-300');
+        hideAllInsertionBars();
 
         if (draggedItem) {
             const draggedIndex = parseInt(draggedItem.dataset.index);
@@ -542,10 +586,12 @@ function displayManhwaImagesPreview() {
             // on le met à la fin
             if (!event.target.closest('li')) {
                 const [movedFile] = manhwaImageFiles.splice(draggedIndex, 1);
-                manhwaImageFiles.push(movedFile); // Ajoute à la fin
+                // Si le conteneur est vide, on l'insère à l'index 0, sinon à la fin
+                const manhwaFilesLength = manhwaImageFiles.length; // Longueur avant d'ajouter le fichier
+                const targetIndex = manhwaFilesLength; // Toujours à la fin
+                manhwaImageFiles.splice(targetIndex, 0, movedFile);
                 displayManhwaImagesPreview();
             }
-            // Si c'est déposé sur un li, l'écouteur du li gérera déjà ça.
         }
     });
 
@@ -556,11 +602,13 @@ function displayManhwaImagesPreview() {
 // Gestion des boutons d'orientation Manhwa
 orientationVerticalButton.addEventListener('click', () => {
     mergeOrientation = 'vertical';
-    orientationVerticalButton.classList.remove('bg-gray-200', 'text-gray-700', 'border-gray-300'); // Supprime les styles inactifs
-    orientationVerticalButton.classList.add('bg-blue-600', 'text-white', 'border-blue-500'); // Ajoute les styles actifs
-    orientationHorizontalButton.classList.remove('bg-blue-600', 'text-white', 'border-blue-500'); // Supprime les styles actifs de l'autre bouton
-    orientationHorizontalButton.classList.add('bg-gray-200', 'text-gray-700', 'border-gray-300'); // Ajoute les styles inactifs à l'autre bouton
-    displayManhwaImagesPreview(); // Rafraîchit l'affichage au cas où la mise en évidence dépend de l'orientation
+    orientationVerticalButton.classList.remove('bg-gray-200', 'text-gray-700', 'border-gray-300');
+    orientationVerticalButton.classList.add('bg-blue-600', 'text-white', 'border-blue-500');
+    orientationHorizontalButton.classList.remove('bg-blue-600', 'text-white', 'border-blue-500');
+    orientationHorizontalButton.classList.add('bg-gray-200', 'text-gray-700', 'border-gray-300');
+    // Rafraîchit l'affichage pour s'assurer que la grille prend en compte l'orientation si nécessaire (même si Tailwind le fait)
+    // Et surtout pour que la logique de la barre d'insertion s'adapte à la nouvelle orientation.
+    displayManhwaImagesPreview();
     updateManhwaMergeButtonState();
 });
 
@@ -570,7 +618,7 @@ orientationHorizontalButton.addEventListener('click', () => {
     orientationHorizontalButton.classList.add('bg-blue-600', 'text-white', 'border-blue-500');
     orientationVerticalButton.classList.remove('bg-blue-600', 'text-white', 'border-blue-500');
     orientationVerticalButton.classList.add('bg-gray-200', 'text-gray-700', 'border-gray-300');
-    displayManhwaImagesPreview(); // Rafraîchit l'affichage au cas où la mise en évidence dépend de l'orientation
+    displayManhwaImagesPreview(); // Rafraîchit pour adapter la barre d'insertion
     updateManhwaMergeButtonState();
 });
 
@@ -749,7 +797,7 @@ async function mergeManhwaImages() {
         downloadLink.textContent = `Télécharger l'image fusionnée (${mergedManhwaBlobs[0].name})`;
         downloadLink.classList.add('bg-purple-600', 'hover:bg-purple-700', 'text-white', 'font-bold', 'py-3', 'px-8', 'rounded-full', 'text-lg', 'shadow-lg', 'transition-colors', 'duration-200', 'block', 'text-center', 'mx-auto');
 
-        manhwaDownloadLink.appendChild(downloadLink); // Utilise l'ID corrigé
+        manhwaDownloadLink.appendChild(downloadLink);
         downloadLink.addEventListener('click', () => {
             setTimeout(() => URL.revokeObjectURL(url), 100);
         });
@@ -784,7 +832,7 @@ async function mergeManhwaImages() {
             downloadLink.textContent = `Télécharger toutes les parties (${mergedManhwaBlobs.length} fichiers)`;
             downloadLink.classList.add('bg-purple-600', 'hover:bg-purple-700', 'text-white', 'font-bold', 'py-3', 'px-8', 'rounded-full', 'text-lg', 'shadow-lg', 'transition-colors', 'duration-200', 'block', 'text-center', 'mx-auto');
 
-            manhwaDownloadLink.appendChild(downloadLink); // Utilise l'ID corrigé
+            manhwaDownloadLink.appendChild(downloadLink);
 
             downloadLink.addEventListener('click', () => {
                 setTimeout(() => URL.revokeObjectURL(url), 100);
