@@ -382,6 +382,8 @@ function displayManhwaImagesPreview() {
 
     const gridContainer = document.createElement('div');
     gridContainer.classList.add('grid', 'grid-cols-1', 'sm:grid-cols-2', 'lg:grid-cols-3', 'gap-4');
+    // Ajoute le gridContainer au manhwaImagesPreview ici, immédiatement.
+    manhwaImagesPreview.appendChild(gridContainer);
 
     manhwaImageFiles.forEach((file, index) => { // Ajoute 'index' pour suivre la position
         const reader = new FileReader();
@@ -415,7 +417,7 @@ function displayManhwaImagesPreview() {
             li.appendChild(fileNameSpan);
             li.appendChild(removeButton); // Ajoute le bouton de suppression
 
-            gridContainer.appendChild(li);
+            gridContainer.appendChild(li); // Ajoute l'élément li directement au gridContainer
 
             // --- GESTIONNAIRES D'ÉVÉNEMENTS POUR LE GLISSER-DÉPOSER sur les LI ---
             li.addEventListener('dragstart', (event) => {
@@ -506,19 +508,9 @@ function displayManhwaImagesPreview() {
                     item.classList.remove('border-t-4', 'border-b-4', 'border-l-4', 'border-r-4', 'border-blue-300');
                 });
             });
-
         };
         reader.readAsDataURL(file);
     });
-
-    // Ajouter le gridContainer à l'aperçu seulement une fois toutes les images traitées
-    // Utilise setTimeout pour s'assurer que toutes les images sont chargées avant d'ajouter le conteneur
-    // car FileReader.onload est asynchrone
-    setTimeout(() => {
-        if (gridContainer.children.length === manhwaImageFiles.length) {
-            manhwaImagesPreview.appendChild(gridContainer);
-        }
-    }, 50); // Un petit délai, ou mieux, un compteur de chargement d'images
 
     // --- GESTIONNAIRES D'ÉVÉNEMENTS POUR LE GLISSER-DÉPOSER sur le CONTENEUR GLOBAL ---
     // Ces écouteurs gèrent le cas où l'on dépose un élément en dehors d'une miniature spécifique,
