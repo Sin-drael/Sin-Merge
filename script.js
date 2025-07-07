@@ -400,12 +400,24 @@ function displayManhwaImagesPreview() {
             fileNameSpan.textContent = file.name;
             fileNameSpan.classList.add('text-gray-800', 'font-medium', 'break-all');
 
+            const removeButton = document.createElement('button');
+            removeButton.innerHTML = '&times;'; // Icône "X"
+            removeButton.classList.add('ml-auto', 'text-red-500', 'hover:text-red-700', 'font-bold', 'text-lg', 'p-1', 'rounded-full', 'w-6', 'h-6', 'flex', 'items-center', 'justify-center', 'hover:bg-red-100');
+            removeButton.title = 'Supprimer cette image';
+            removeButton.addEventListener('click', () => {
+                // Supprime l'image du tableau manhwaImageFiles
+                manhwaImageFiles.splice(parseInt(li.dataset.index), 1);
+                displayManhwaImagesPreview(); // Re-render l'aperçu
+            });
+
+
             li.appendChild(img);
             li.appendChild(fileNameSpan);
+            li.appendChild(removeButton); // Ajoute le bouton de suppression
 
             gridContainer.appendChild(li);
 
-            // --- GESTIONNAIRES D'ÉVÉNEMENTS POUR LE GLISSER-DÉPOSER ---
+            // --- GESTIONNAIRES D'ÉVÉNEMENTS POUR LE GLISSER-DÉPOSER sur les LI ---
             li.addEventListener('dragstart', (event) => {
                 draggedItem = li;
                 event.dataTransfer.effectAllowed = 'move';
@@ -416,30 +428,68 @@ function displayManhwaImagesPreview() {
             li.addEventListener('dragover', (event) => {
                 event.preventDefault(); // Permet le dépôt
                 event.dataTransfer.dropEffect = 'move';
-                if (li !== draggedItem) { // Évite de se mettre en surbrillance soi-même
-                    li.classList.add('border-2', 'border-dashed', 'border-blue-300'); // Visuel de la zone de dépôt
+                // Calcul de la moitié pour insérer avant ou après
+                const targetRect = li.getBoundingClientRect();
+                const offsetY = event.clientY - targetRect.top;
+                const offsetX = event.clientX - targetRect.left;
+
+                // Nettoie toutes les classes de survol des frères
+                Array.from(li.parentNode.children).forEach(sibling => {
+                    sibling.classList.remove('border-t-4', 'border-b-4', 'border-l-4', 'border-r-4', 'border-blue-300');
+                });
+
+                if (mergeOrientation === 'vertical') {
+                    if (offsetY < targetRect.height / 2) {
+                        li.classList.add('border-t-4', 'border-blue-300'); // Insérer avant
+                    } else {
+                        li.classList.add('border-b-4', 'border-blue-300'); // Insérer après
+                    }
+                } else { // horizontal
+                    if (offsetX < targetRect.width / 2) {
+                        li.classList.add('border-l-4', 'border-blue-300'); // Insérer avant
+                    } else {
+                        li.classList.add('border-r-4', 'border-blue-300'); // Insérer après
+                    }
                 }
             });
 
             li.addEventListener('dragleave', () => {
-                li.classList.remove('border-2', 'border-dashed', 'border-blue-300');
+                li.classList.remove('border-t-4', 'border-b-4', 'border-l-4', 'border-r-4', 'border-blue-300');
             });
 
             li.addEventListener('drop', (event) => {
                 event.preventDefault();
-                li.classList.remove('border-2', 'border-dashed', 'border-blue-300');
+                li.classList.remove('border-t-4', 'border-b-4', 'border-l-4', 'border-r-4', 'border-blue-300');
 
                 if (draggedItem && draggedItem !== li) {
                     const draggedIndex = parseInt(draggedItem.dataset.index);
-                    const targetIndex = parseInt(li.dataset.index);
+                    let targetIndex = parseInt(li.dataset.index);
+
+                    const targetRect = li.getBoundingClientRect();
+                    const offsetY = event.clientY - targetRect.top;
+                    const offsetX = event.clientX - targetRect.left;
+
+                    // Ajuste l'index cible si on dépose après la moitié de l'élément
+                    if (mergeOrientation === 'vertical') {
+                        if (offsetY > targetRect.height / 2) {
+                            targetIndex++;
+                        }
+                    } else { // horizontal
+                        if (offsetX > targetRect.width / 2) {
+                            targetIndex++;
+                        }
+                    }
+
+                    // Assure que l'index cible ne dépasse pas la fin du tableau si on glisse vers le bas/droite
+                    if (draggedIndex < targetIndex) {
+                        targetIndex--; // Si on déplace vers la droite/bas, l'élément original est retiré, décalant les indices
+                    }
 
                     // --- MISE À JOUR DE L'ORDRE DANS manhwaImageFiles ---
-                    // Utilise splice pour retirer et insérer l'élément dans le tableau
                     const [movedFile] = manhwaImageFiles.splice(draggedIndex, 1);
                     manhwaImageFiles.splice(targetIndex, 0, movedFile);
 
                     // --- RECONSTRUCTION DE L'AFFICHAGE ENTIER ---
-                    // C'est la méthode la plus simple et la plus fiable pour garantir que le DOM et les data-index sont à jour.
                     displayManhwaImagesPreview(); // Appelle cette fonction pour reconstruire l'affichage
                 }
             });
@@ -453,17 +503,60 @@ function displayManhwaImagesPreview() {
 
                 // Nettoyage de toutes les bordures de survol au cas où dragleave n'ait pas été déclenché
                 document.querySelectorAll('#manhwaImagesPreview li').forEach(item => {
-                    item.classList.remove('border-2', 'border-dashed', 'border-blue-300');
+                    item.classList.remove('border-t-4', 'border-b-4', 'border-l-4', 'border-r-4', 'border-blue-300');
                 });
             });
 
-            // Une fois que toutes les images sont chargées et les LI ajoutés au gridContainer
-            if (gridContainer.children.length === manhwaImageFiles.length) {
-                manhwaImagesPreview.appendChild(gridContainer);
-            }
         };
         reader.readAsDataURL(file);
     });
+
+    // Ajouter le gridContainer à l'aperçu seulement une fois toutes les images traitées
+    // Utilise setTimeout pour s'assurer que toutes les images sont chargées avant d'ajouter le conteneur
+    // car FileReader.onload est asynchrone
+    setTimeout(() => {
+        if (gridContainer.children.length === manhwaImageFiles.length) {
+            manhwaImagesPreview.appendChild(gridContainer);
+        }
+    }, 50); // Un petit délai, ou mieux, un compteur de chargement d'images
+
+    // --- GESTIONNAIRES D'ÉVÉNEMENTS POUR LE GLISSER-DÉPOSER sur le CONTENEUR GLOBAL ---
+    // Ces écouteurs gèrent le cas où l'on dépose un élément en dehors d'une miniature spécifique,
+    // par exemple, pour le placer à la fin de la liste.
+    manhwaImagesPreview.addEventListener('dragover', (event) => {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'move';
+        // Ajoute un visuel si on survole la zone vide de l'aperçu
+        if (!event.target.closest('li')) { // Si l'élément survolé n'est pas un 'li'
+            manhwaImagesPreview.classList.add('border-2', 'border-dashed', 'border-blue-300');
+        }
+    });
+
+    manhwaImagesPreview.addEventListener('dragleave', (event) => {
+        // Ne supprime le style que si on quitte complètement la zone de preview
+        if (!manhwaImagesPreview.contains(event.relatedTarget)) {
+            manhwaImagesPreview.classList.remove('border-2', 'border-dashed', 'border-blue-300');
+        }
+    });
+
+    manhwaImagesPreview.addEventListener('drop', (event) => {
+        event.preventDefault();
+        manhwaImagesPreview.classList.remove('border-2', 'border-dashed', 'border-blue-300');
+
+        if (draggedItem) {
+            const draggedIndex = parseInt(draggedItem.dataset.index);
+
+            // Si l'élément est déposé directement sur le conteneur et non sur un li spécifique,
+            // on le met à la fin
+            if (!event.target.closest('li')) {
+                const [movedFile] = manhwaImageFiles.splice(draggedIndex, 1);
+                manhwaImageFiles.push(movedFile); // Ajoute à la fin
+                displayManhwaImagesPreview();
+            }
+            // Si c'est déposé sur un li, l'écouteur du li gérera déjà ça.
+        }
+    });
+
     updateManhwaMergeButtonState();
 }
 
@@ -475,6 +568,7 @@ orientationVerticalButton.addEventListener('click', () => {
     orientationVerticalButton.classList.add('bg-blue-600', 'text-white', 'border-blue-500'); // Ajoute les styles actifs
     orientationHorizontalButton.classList.remove('bg-blue-600', 'text-white', 'border-blue-500'); // Supprime les styles actifs de l'autre bouton
     orientationHorizontalButton.classList.add('bg-gray-200', 'text-gray-700', 'border-gray-300'); // Ajoute les styles inactifs à l'autre bouton
+    displayManhwaImagesPreview(); // Rafraîchit l'affichage au cas où la mise en évidence dépend de l'orientation
     updateManhwaMergeButtonState();
 });
 
@@ -484,6 +578,7 @@ orientationHorizontalButton.addEventListener('click', () => {
     orientationHorizontalButton.classList.add('bg-blue-600', 'text-white', 'border-blue-500');
     orientationVerticalButton.classList.remove('bg-blue-600', 'text-white', 'border-blue-500');
     orientationVerticalButton.classList.add('bg-gray-200', 'text-gray-700', 'border-gray-300');
+    displayManhwaImagesPreview(); // Rafraîchit l'affichage au cas où la mise en évidence dépend de l'orientation
     updateManhwaMergeButtonState();
 });
 
