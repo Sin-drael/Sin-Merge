@@ -396,6 +396,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const img = document.createElement('img');
                     img.src = e.target.result;
                     img.classList.add('w-24', 'h-24', 'object-cover', 'rounded-md', 'shadow-sm');
+                    img.title = file.name;
                     manhwaImagesPreview.appendChild(img);
                 };
                 reader.readAsDataURL(file);
