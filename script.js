@@ -1,11 +1,11 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // --- NOUVEAU : Éléments de navigation et de section ---
+    // --- Éléments de navigation et de section ---
     const navVintedMergeButton = document.getElementById('navVintedMerge');
     const navManhwaFusionButton = document.getElementById('navManhwaFusion');
     const vintedMergerSection = document.getElementById('vintedMergerSection');
     const manhwaMergerSection = document.getElementById('manhwaMergerSection');
 
-    // --- Éléments spécifiques à la section Vinted Merge (existants) ---
+    // --- Éléments spécifiques à la section Vinted Merge ---
     const overlayInput = document.getElementById('overlayInput');
     const selectOverlayButton = document.getElementById('selectOverlayButton');
     const overlayFileName = document.getElementById('overlayFileName');
@@ -29,17 +29,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const orientationHorizontalButton = document.getElementById('orientationHorizontal');
     const orientationVerticalButton = document.getElementById('orientationVertical');
 
-    // NOUVEAU : Références aux éléments de la barre de chargement SPECIFIQUES à la fusion Manhwa
+    // Références aux éléments de la barre de chargement spécifiques à la fusion Manhwa
     const manhwaLoadingBarContainer = document.getElementById('manhwaLoadingBarContainer');
     const manhwaLoadingBar = document.getElementById('manhwaLoadingBar');
     const manhwaZipLoadingMessage = document.getElementById('manhwaZipLoadingMessage');
 
-    // NOUVEAU : Référence au bouton Reset Manhwa
+    // Référence au bouton Reset Manhwa
     const resetManhwaButton = document.getElementById('resetManhwaButton');
     const manhwaStatusMessage = document.getElementById('manhwaStatusMessage');
     const manhwaDownloadLinkContainer = document.getElementById('manhwaDownloadLink');
 
-    // DEPLACEMENT DE LA DECLARATION : Assure que mergeManhwaButton est défini dès le début
     const mergeManhwaButton = document.getElementById('mergeManhwaButton');
 
 
@@ -48,8 +47,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let draggedElement = null; // Élément en cours de glissement pour le drag-and-drop
     let dropTargetIndicator = null; // Pour suivre l'élément où l'indicateur est affiché
 
-    // NOUVEAU : Taille maximale des images à fusionner par partie
-    const MAX_IMAGES_PER_CHUNK = 50; // Ajustez ce nombre si nécessaire après des tests
+    // Taille maximale des images à fusionner par partie
+    const MAX_IMAGES_PER_CHUNK = 50;
 
     // Références aux éléments de la barre de chargement (pour la section Vinted Merge / Global si Manhwa utilise les mêmes IDs)
     const loadingBarContainer = document.getElementById('loadingBarContainer');
@@ -60,13 +59,12 @@ document.addEventListener('DOMContentLoaded', () => {
     let backgroundImageFiles = [];
     let mergedImageBlobs = [];
 
-    // --- NOUVEAU : Fonctions de gestion des sections ---
+    // --- Fonctions de gestion des sections ---
 
     // Fonction pour masquer toutes les sections
     const hideAllSections = () => {
         vintedMergerSection.classList.add('hidden');
         manhwaMergerSection.classList.add('hidden');
-        // Ajoutez ici d'autres sections à masquer si vous en créez
     };
 
     // Fonction pour afficher une section spécifique
@@ -75,18 +73,16 @@ document.addEventListener('DOMContentLoaded', () => {
         sectionElement.classList.remove('hidden');
     };
 
-    // --- NOUVEAU : Initialisation des écouteurs d'événements pour la navigation ---
+    // --- Initialisation des écouteurs d'événements pour la navigation ---
     navVintedMergeButton.addEventListener('click', () => {
         showSection(vintedMergerSection);
-        // Vous pouvez ajouter ici une logique pour réinitialiser l'état de la section Vinted si nécessaire
     });
 
     navManhwaFusionButton.addEventListener('click', () => {
         showSection(manhwaMergerSection);
-        // Vous pouvez ajouter ici une logique pour initialiser la section Manhwa (quand elle sera développée)
     });
 
-    // --- Fin des nouvelles sections de navigation ---
+    // --- Fin des sections de navigation ---
 
 
     // Fonction pour mettre à jour l'état du bouton de fusion
@@ -101,15 +97,13 @@ document.addEventListener('DOMContentLoaded', () => {
             mergeButton.classList.add('bg-green-400', 'cursor-not-allowed');
         }
         downloadAllButton.classList.add('hidden');
-        // Cacher la barre de chargement et son message si les conditions de fusion changent
         loadingBarContainer.classList.add('hidden');
         zipLoadingMessage.classList.add('hidden');
-        loadingBar.style.width = '0%'; // Réinitialise la largeur de la barre
+        loadingBar.style.width = '0%';
     };
 
-    // --- NOUVEAU : Fonction pour mettre à jour l'état du bouton de fusion Manhwa ---
+    // Fonction pour mettre à jour l'état du bouton de fusion Manhwa
     const updateManhwaMergeButtonState = () => {
-        // Le bouton est activé s'il y a au moins 1 image et qu'une orientation est sélectionnée
         if (manhwaImageFiles.length > 0 && mergeOrientation) {
             mergeManhwaButton.disabled = false;
             mergeManhwaButton.classList.remove('bg-green-400', 'cursor-not-allowed');
@@ -119,39 +113,31 @@ document.addEventListener('DOMContentLoaded', () => {
             mergeManhwaButton.classList.remove('bg-green-600', 'hover:bg-green-700');
             mergeManhwaButton.classList.add('bg-green-400', 'cursor-not-allowed');
         }
-        manhwaDownloadLinkContainer.innerHTML = ''; // Cache le lien de téléchargement précédent
-        manhwaStatusMessage.textContent = ''; // Efface le message de statut
+        manhwaDownloadLinkContainer.innerHTML = '';
+        manhwaStatusMessage.textContent = '';
     };
 
     // Fonction pour réinitialiser la section Manhwa Fusion
     const resetManhwaImages = () => {
-        manhwaImageFiles = []; // Vide le tableau qui contient les fichiers images
+        manhwaImageFiles = [];
 
-        // Réinitialise l'input de fichier (important pour pouvoir re-sélectionner les mêmes fichiers)
         manhwaImagesInput.value = '';
 
-        // Réinitialise le texte affichant les noms des fichiers
         manhwaImagesFileNames.textContent = 'Aucun fichier sélectionné.';
 
-        // Efface tous les aperçus d'images
         manhwaImagesPreview.innerHTML = '<span class="text-gray-400">Aperçu des images</span>';
 
-        // Réinitialise l'orientation visuelle à "Vertical" par défaut (comme au chargement de la page)
         orientationVerticalButton.click();
 
-        // Efface le message de statut et retire toutes les classes de couleur
         manhwaStatusMessage.textContent = '';
         manhwaStatusMessage.classList.remove('text-red-500', 'text-green-600', 'text-blue-600');
 
-        // Efface le lien de téléchargement s'il y en avait un
         manhwaDownloadLinkContainer.innerHTML = '';
 
-        // Cache la barre de chargement et son message si elle était visible
-        manhwaLoadingBarContainer.classList.add('hidden'); // Utilisation des IDs Manhwa
-        manhwaZipLoadingMessage.classList.add('hidden');    // Utilisation des IDs Manhwa
-        manhwaLoadingBar.style.width = '0%';                // Utilisation des IDs Manhwa
+        manhwaLoadingBarContainer.classList.add('hidden');
+        manhwaZipLoadingMessage.classList.add('hidden');
+        manhwaLoadingBar.style.width = '0%';
 
-        // Met à jour l'état du bouton de fusion (il devrait se désactiver car il n'y a plus d'images)
         updateManhwaMergeButtonState();
     };
 
@@ -258,21 +244,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     const overlayAspectRatio = overlayImage.naturalWidth / overlayImage.naturalHeight;
 
-                    let imgDrawWidth = imgOriginalWidth; // Default to original image size
-                    let imgDrawHeight = imgOriginalHeight; // Default to original image size
+                    let imgDrawWidth = imgOriginalWidth;
+                    let imgDrawHeight = imgOriginalHeight;
                     let imgOffsetX = 0;
                     let imgOffsetY = 0;
 
                     let canvasWidth;
                     let canvasHeight;
 
-                    // Logique conditionnelle basée sur l'orientation de l'IMAGE DE FOND
-                    // imgAspectRatio <= 1 signifie que l'image de fond est portrait ou carrée
-                    if (imgAspectRatio <= 1) { // L'image de fond est portrait (hauteur >= largeur) ou carrée
-                        const MAX_FINAL_HEIGHT = 1020; // Hauteur maximale souhaitée pour l'image fusionnée finale
+                    if (imgAspectRatio <= 1) {
+                        const MAX_FINAL_HEIGHT = 1020;
 
-                        // 1. Déterminer les dimensions de l'image de fond redimensionnée pour qu'elle ne dépasse pas MAX_FINAL_HEIGHT en hauteur
-                        // et conserve ses proportions, sans dépasser sa taille originale si elle est plus petite.
                         let scale = 1;
                         if (imgOriginalHeight > MAX_FINAL_HEIGHT) {
                             scale = MAX_FINAL_HEIGHT / imgOriginalHeight;
@@ -280,47 +262,34 @@ document.addEventListener('DOMContentLoaded', () => {
                         imgDrawWidth = imgOriginalWidth * scale;
                         imgDrawHeight = imgOriginalHeight * scale;
 
-                        // 2. Le canevas prend les dimensions exactes de l'image de fond redimensionnée.
-                        // Cela garantit qu'il n'y a PAS de bandes blanches autour de l'image de fond.
                         canvasWidth = imgDrawWidth;
                         canvasHeight = imgDrawHeight;
 
-                        // 3. L'image de fond est dessinée à l'origine du canevas, car elle le remplit.
                         imgOffsetX = 0;
                         imgOffsetY = 0;
 
-                    } else { // L'image de fond est paysage (largeur > hauteur)
-                        const MAX_FINAL_HEIGHT = 1020; // Hauteur maximale souhaitée pour l'image fusionnée finale
+                    } else {
+                        const MAX_FINAL_HEIGHT = 1020;
 
-                        // La hauteur finale du canvas DOIT être MAX_FINAL_HEIGHT
                         canvasHeight = MAX_FINAL_HEIGHT;
-                        // La largeur du canvas est déterminée par cette hauteur et le ratio du CALQUE (overlay)
                         canvasWidth = canvasHeight * overlayAspectRatio;
 
-                       // Calcul des dimensions de l'image de fond pour qu'elle soit CONTENUE dans le nouveau canvas
-                       // et conserve ses propres proportions.
                         let scale = Math.min(canvasWidth / imgOriginalWidth, canvasHeight / imgOriginalHeight);
                         imgDrawWidth = imgOriginalWidth * scale;
                         imgDrawHeight = imgOriginalHeight * scale;
 
-                        // Centrage de l'image de fond dans le canevas
-                        // Il y aura des bandes blanches si l'image de fond est plus "large" que le canevas final
                         imgOffsetX = (canvasWidth - imgDrawWidth) / 2;
                         imgOffsetY = (canvasHeight - imgDrawHeight) / 2;
                     }
 
-                    // Appliquer les dimensions calculées au canvas
                     canvas.width = canvasWidth;
                     canvas.height = canvasHeight;
 
-                    // Remplir le nouveau canvas avec du blanc avant de dessiner quoi que ce soit
                     ctx.fillStyle = '#FFFFFF';
                     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-                    // Dessiner l'image de fond avec les dimensions potentiellement ajustées (imgDrawWidth/Height)
                     ctx.drawImage(img, imgOffsetX, imgOffsetY, imgDrawWidth, imgDrawHeight);
 
-                    // Dessiner le calque (overlay) par-dessus, redimensionné pour remplir le nouveau canvas
                     ctx.drawImage(overlayImage, 0, 0, canvas.width, canvas.height);
 
                     canvas.toBlob((blob) => {
@@ -351,7 +320,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     console.error("Erreur de chargement de l'image de fond:", file.name);
                     statusMessage.textContent = `Erreur de chargement de l'image de fond : ${file.name}.`;
                     statusMessage.classList.add('text-red-500');
-                    resolve(); // Important pour que la boucle puisse continuer même en cas d'erreur
+                    resolve();
                 };
             });
             URL.revokeObjectURL(img.src);
@@ -366,14 +335,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Écouteur pour le bouton de sélection des images Manhwa
     selectManhwaImagesButton.addEventListener('click', () => {
         manhwaImagesInput.click();
     });
 
     manhwaImagesInput.addEventListener('change', async (event) => {
         const newFiles = Array.from(event.target.files).filter(file => file.type.startsWith('image/'));
-        // Utiliser une Map pour gérer l'unicité des fichiers par une clé combinée
         const uniqueFiles = new Map();
         manhwaImageFiles.forEach(file => {
             uniqueFiles.set(`${file.name}-${file.size}-${file.lastModified}`, file);
@@ -383,64 +350,71 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         manhwaImageFiles = Array.from(uniqueFiles.values());
 
-        manhwaImagesPreview.innerHTML = ''; // Clear existing previews
+        manhwaImagesPreview.innerHTML = '';
         if (manhwaImageFiles.length > 0) {
-            if (manhwaImageFiles.length === 1) {
-                manhwaImagesFileNames.textContent = manhwaImageFiles[0].name;
-            } else {
-                manhwaImagesFileNames.textContent = `${manhwaImageFiles.length} fichiers sélectionnés.`;
-            }
+            manhwaImagesFileNames.textContent = manhwaImageFiles.length === 1 ? manhwaImageFiles[0].name : `${manhwaImageFiles.length} fichiers sélectionnés.`;
 
-            // Load all images and create previews
-            for (const file of manhwaImageFiles) {
-                // MODIFICATION ICI : Crée un conteneur pour la miniature et le nom
-                const thumbnailWrapper = document.createElement('div');
-                thumbnailWrapper.classList.add('flex', 'flex-col', 'items-center', 'manhwa-thumbnail-wrapper', 'cursor-grab', 'p-1'); // Ajoutez p-1 pour un petit padding
-
-                const imgContainer = document.createElement('div');
-                imgContainer.classList.add(
-                    'relative', 'w-24', 'h-24', 'object-cover', 'rounded-md', 'shadow-sm',
-                    'overflow-hidden', 'flex-shrink-0' // Add flex-shrink-0
-                );
-                imgContainer.draggable = true; // Make it draggable
-                // Stocker l'index initial de l'image dans le DOM et le tableau
-                imgContainer.dataset.originalIndex = manhwaImageFiles.indexOf(file);
-                // Utiliser une clé unique pour le dataset pour l'identification lors du drag/drop
-                imgContainer.dataset.fileKey = `${file.name}-${file.size}-${file.lastModified}`;
-
-                const img = document.createElement('img');
-                img.classList.add('w-full', 'h-full', 'object-cover', 'pointer-events-none'); // pointer-events-none pour éviter d'interférer avec le drag sur l'image elle-même
-                imgContainer.appendChild(img);
-                thumbnailWrapper.appendChild(imgContainer); // Ajoutez le conteneur d'image au wrapper
-
-                // NOUVEL ÉLÉMENT : Le nom de l'image
-                const fileNameSpan = document.createElement('span');
-                fileNameSpan.classList.add('text-xs', 'text-gray-500', 'mt-1', 'w-24', 'truncate', 'text-center'); // w-24 pour limiter la largeur et truncate
-                fileNameSpan.textContent = file.name;
-                thumbnailWrapper.appendChild(fileNameSpan); // Ajoutez le nom de fichier au wrapper
-
-                manhwaImagesPreview.appendChild(thumbnailWrapper); // Ajoutez le wrapper complet à l'aperçu
-
-                await new Promise(resolve => {
+            // Utilisation de Promise.all pour charger toutes les images en parallèle
+            const loadPromises = manhwaImageFiles.map(file => {
+                return new Promise(resolve => {
+                    const reader = new FileReader();
                     reader.onload = (e) => {
+                        const img = new Image();
+                        img.onload = () => {
+                            resolve({ file, src: e.target.result, imgElement: img }); // Retourne le fichier, la source et l'élément Image
+                        };
+                        img.onerror = () => {
+                            console.error(`Erreur de chargement de l'image de prévisualisation: ${file.name}`);
+                            resolve(null); // Gérer les erreurs de chargement d'image
+                        };
                         img.src = e.target.result;
-                        resolve();
                     };
                     reader.readAsDataURL(file);
                 });
-            }
+            });
+
+            const loadedImages = await Promise.all(loadPromises);
+
+            loadedImages.forEach(result => {
+                if (result) { // Si l'image a été chargée avec succès
+                    const { file, src, imgElement } = result;
+
+                    const thumbnailWrapper = document.createElement('div');
+                    thumbnailWrapper.classList.add('flex', 'flex-col', 'items-center', 'manhwa-thumbnail-wrapper', 'cursor-grab', 'p-1');
+                    
+                    const imgContainer = document.createElement('div');
+                    imgContainer.classList.add(
+                        'relative', 'w-24', 'h-24', 'object-cover', 'rounded-md', 'shadow-sm',
+                        'overflow-hidden', 'flex-shrink-0'
+                    );
+                    imgContainer.draggable = true;
+                    imgContainer.dataset.originalIndex = manhwaImageFiles.indexOf(file);
+                    imgContainer.dataset.fileKey = `${file.name}-${file.size}-${file.lastModified}`;
+
+                    imgElement.classList.add('w-full', 'h-full', 'object-cover', 'pointer-events-none');
+                    imgContainer.appendChild(imgElement);
+                    thumbnailWrapper.appendChild(imgContainer);
+
+                    const fileNameSpan = document.createElement('span');
+                    fileNameSpan.classList.add('text-xs', 'text-gray-500', 'mt-1', 'w-24', 'truncate', 'text-center');
+                    fileNameSpan.textContent = file.name;
+                    thumbnailWrapper.appendChild(fileNameSpan);
+
+                    manhwaImagesPreview.appendChild(thumbnailWrapper);
+                }
+            });
+
         } else {
             manhwaImagesFileNames.textContent = 'Aucun fichier sélectionné.';
             manhwaImagesPreview.innerHTML = '<span class="text-gray-400">Aperçu des images</span>';
         }
         updateManhwaMergeButtonState();
-        event.target.value = ''; // Reset input file to allow re-selection of the same files
+        event.target.value = '';
     });
 
-    // --- NOUVEAU : Logique de Drag & Drop pour ManhwaImagesPreview ---
+    // --- Logique de Drag & Drop pour ManhwaImagesPreview ---
 
     manhwaImagesPreview.addEventListener('dragstart', (e) => {
-        // Le draggedElement est maintenant le thumbnailWrapper, pas seulement imgContainer
         const targetWrapper = e.target.closest('.manhwa-thumbnail-wrapper');
         if (targetWrapper) {
             draggedElement = targetWrapper;
@@ -451,15 +425,13 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     manhwaImagesPreview.addEventListener('dragover', (e) => {
-        e.preventDefault(); // Permet le drop
+        e.preventDefault();
         const targetWrapper = e.target.closest('.manhwa-thumbnail-wrapper');
 
         if (draggedElement && targetWrapper && targetWrapper !== draggedElement) {
-            // Supprimer tous les indicateurs existants
             if (dropTargetIndicator && dropTargetIndicator !== targetWrapper) {
                 dropTargetIndicator.querySelector('.relative').classList.remove('border-l-4', 'border-r-4', 'border-blue-500');
             }
-            // Retirer de la cible actuelle aussi pour éviter les résidus si la position change
             targetWrapper.querySelector('.relative').classList.remove('border-l-4', 'border-r-4', 'border-blue-500');
 
             const targetRect = targetWrapper.getBoundingClientRect();
@@ -471,37 +443,47 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 targetWrapper.querySelector('.relative').classList.add('border-r-4', 'border-blue-500');
             }
-            dropTargetIndicator = targetWrapper; // Mettre à jour la référence de l'indicateur
+            dropTargetIndicator = targetWrapper;
             e.dataTransfer.dropEffect = 'move';
         } else if (draggedElement && e.target === manhwaImagesPreview && manhwaImagesPreview.children.length === 0) {
-            // Cas où l'on glisse dans une zone vide (après un reset par exemple)
+            manhwaImagesPreview.classList.add('border-2', 'border-blue-500', 'border-dashed');
+            e.dataTransfer.dropEffect = 'move';
+        } else if (draggedElement && !targetWrapper && e.target === manhwaImagesPreview && manhwaImagesPreview.querySelector('.manhwa-thumbnail-wrapper')) {
+            // Dragging over the main preview area, but not directly over a thumbnail
+            // Remove any existing indicators
+            if (dropTargetIndicator) {
+                dropTargetIndicator.querySelector('.relative').classList.remove('border-l-4', 'border-r-4', 'border-blue-500');
+                dropTargetIndicator = null;
+            }
+             // Optional: Add a general border to the preview area if nothing else is highlighted
             manhwaImagesPreview.classList.add('border-2', 'border-blue-500', 'border-dashed');
             e.dataTransfer.dropEffect = 'move';
         }
     });
 
     manhwaImagesPreview.addEventListener('dragleave', (e) => {
-        // Supprimer tous les indicateurs lorsque la souris quitte n'importe quelle miniature ou la zone d'aperçu
         if (dropTargetIndicator) {
             dropTargetIndicator.querySelector('.relative').classList.remove('border-l-4', 'border-r-4', 'border-blue-500');
             dropTargetIndicator = null;
         }
-        manhwaImagesPreview.classList.remove('border-2', 'border-blue-500', 'border-dashed');
+        // Only remove dashed border from preview if not hovering a thumbnail
+        if (!e.relatedTarget || !e.relatedTarget.closest('.manhwa-thumbnail-wrapper')) {
+            manhwaImagesPreview.classList.remove('border-2', 'border-blue-500', 'border-dashed');
+        }
     });
 
     manhwaImagesPreview.addEventListener('drop', (e) => {
         e.preventDefault();
         if (draggedElement) {
-            // Supprimer tous les indicateurs
             if (dropTargetIndicator) {
                 dropTargetIndicator.querySelector('.relative').classList.remove('border-l-4', 'border-r-4', 'border-blue-500');
                 dropTargetIndicator = null;
             }
             manhwaImagesPreview.classList.remove('border-2', 'border-blue-500', 'border-dashed');
 
-            let targetWrapper = e.target.closest('.manhwa-thumbnail-wrapper'); // Obtenir le conteneur parent
+            let targetWrapper = e.target.closest('.manhwa-thumbnail-wrapper');
 
-            // Gérer le drop dans une zone d'aperçu vide
+            // Handle drop into an empty preview area
             if (!targetWrapper && manhwaImagesPreview.children.length === 0) {
                 manhwaImagesPreview.appendChild(draggedElement);
             } else if (targetWrapper && targetWrapper !== draggedElement) {
@@ -513,30 +495,35 @@ document.addEventListener('DOMContentLoaded', () => {
                 const mouseX = e.clientX;
                 const center = targetRect.left + targetRect.width / 2;
 
-                if (mouseX > center) { // Drop à droite de la cible
+                if (mouseX > center) {
+                    // Drop to the right of the target thumbnail
                     manhwaImagesPreview.insertBefore(draggedElement, wrappers[targetIndexDOM + 1]);
-                } else { // Drop à gauche de la cible
+                } else {
+                    // Drop to the left of the target thumbnail
                     manhwaImagesPreview.insertBefore(draggedElement, wrappers[targetIndexDOM]);
                 }
             }
             
-            // Reordonner le tableau manhwaImageFiles basé sur le nouvel ordre du DOM
+            // Reorder the underlying manhwaImageFiles array based on the new DOM order
             const newOrderedManhwaFiles = [];
             Array.from(manhwaImagesPreview.children).forEach(wrapper => {
-                const key = wrapper.querySelector('[data-file-key]').dataset.fileKey;
-                const file = manhwaImageFiles.find(f => `${f.name}-${f.size}-${f.lastModified}` === key);
-                if (file) {
-                    newOrderedManhwaFiles.push(file);
+                const keyElement = wrapper.querySelector('[data-file-key]');
+                if (keyElement) { // S'assurer que l'élément avec data-file-key existe
+                    const key = keyElement.dataset.fileKey;
+                    const file = manhwaImageFiles.find(f => `${f.name}-${f.size}-${f.lastModified}` === key);
+                    if (file) {
+                        newOrderedManhwaFiles.push(file);
+                    }
                 }
             });
             manhwaImageFiles = newOrderedManhwaFiles;
+            updateManhwaMergeButtonState(); // Mettre à jour l'état du bouton de fusion après réordonnancement
         }
     });
 
     manhwaImagesPreview.addEventListener('dragend', () => {
         if (draggedElement) {
             draggedElement.classList.remove('opacity-50', 'border-2', 'border-blue-500');
-            // S'assurer qu'aucun indicateur persistant n'est présent
             document.querySelectorAll('.manhwa-thumbnail-wrapper .relative').forEach(thumbImgContainer => {
                 thumbImgContainer.classList.remove('border-l-4', 'border-r-4', 'border-blue-500');
             });
@@ -546,7 +533,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- FIN NOUVEAU : Logique de Drag & Drop pour ManhwaImagesPreview ---
+    // --- FIN Logique de Drag & Drop pour ManhwaImagesPreview ---
 
     // Gestion des boutons d'orientation
     orientationVerticalButton.addEventListener('click', () => {
@@ -577,14 +564,13 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        statusMessage.textContent = "Préparation du fichier ZIP..."; // Message initial
+        statusMessage.textContent = "Préparation du fichier ZIP...";
         statusMessage.classList.remove('text-red-500', 'text-green-600');
         statusMessage.classList.add('text-blue-600');
 
-        // Afficher la barre de chargement et le message
         loadingBarContainer.classList.remove('hidden');
         zipLoadingMessage.classList.remove('hidden');
-        loadingBar.style.width = '0%'; // Assurez-vous qu'elle commence à 0%
+        loadingBar.style.width = '0%';
 
         const zip = new JSZip();
 
@@ -593,27 +579,23 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            // Utiliser la fonction onUpdate pour la barre de chargement
             const content = await zip.generateAsync({ type: "blob" }, function updateCallback(metadata) {
-                const percent = metadata.percent.toFixed(2); // Pourcentage avec 2 décimales
-                loadingBar.style.width = `${percent}%`; // Met à jour la largeur de la barre
-                zipLoadingMessage.textContent = `Génération du fichier ZIP : ${percent}%`; // Met à jour le message
+                const percent = metadata.percent.toFixed(2);
+                loadingBar.style.width = `${percent}%`;
+                zipLoadingMessage.textContent = `Génération du fichier ZIP : ${percent}%`;
             });
 
             const zipFileName = `images_fusionnees_${Date.now()}.zip`;
 
-            // Crée un lien de téléchargement temporaire (non ajouté au DOM)
             const tempDownloadLink = document.createElement('a');
             tempDownloadLink.href = URL.createObjectURL(content);
-            tempDownloadLink.download = zipFileName; // Nom du fichier ZIP
+            tempDownloadLink.download = zipFileName;
 
-            // Simule un clic sur le lien pour déclencher le téléchargement
             tempDownloadLink.click();
 
-            // Libère la mémoire en révoquant l'URL de l'objet Blob après le téléchargement
             URL.revokeObjectURL(tempDownloadLink.href);
 
-            statusMessage.textContent = "Fichier ZIP téléchargé !"; // Nouveau message de statut
+            statusMessage.textContent = "Fichier ZIP téléchargé !";
             statusMessage.classList.remove('text-blue-600');
             statusMessage.classList.add('text-green-600');
 
@@ -623,14 +605,13 @@ document.addEventListener('DOMContentLoaded', () => {
             statusMessage.classList.remove('text-blue-600');
             statusMessage.classList.add('text-red-500');
         } finally {
-            // Cacher la barre de chargement et le message quoi qu'il arrive
             loadingBarContainer.classList.add('hidden');
             zipLoadingMessage.classList.add('hidden');
-            loadingBar.style.width = '0%'; // Réinitialise la barre pour la prochaine fois
+            loadingBar.style.width = '0%';
         }
     });
 
-    // --- NOUVEAU : Fonction de fusion des images Manhwa (avec gestion des chunks et ZIP) ---
+    // Fonction de fusion des images Manhwa (avec gestion des chunks et ZIP)
     async function mergeManhwaImages() {
         if (manhwaImageFiles.length === 0) {
             manhwaStatusMessage.textContent = "Veuillez sélectionner au moins une image.";
@@ -641,9 +622,8 @@ document.addEventListener('DOMContentLoaded', () => {
         manhwaStatusMessage.textContent = "Préparation de la fusion...";
         manhwaStatusMessage.classList.remove('text-red-500', 'text-green-600');
         manhwaStatusMessage.classList.add('text-blue-600');
-        manhwaDownloadLinkContainer.innerHTML = ''; // Efface tout lien de téléchargement précédent
+        manhwaDownloadLinkContainer.innerHTML = '';
 
-        // --- Afficher la barre de chargement ZIP et le message (Utilisation des IDs Manhwa) ---
         manhwaLoadingBarContainer.classList.remove('hidden');
         manhwaZipLoadingMessage.classList.remove('hidden');
         manhwaZipLoadingMessage.textContent = "Chargement des images...";
@@ -651,25 +631,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const allLoadedImages = [];
 
-        // --- Créer une liste de promesses pour charger toutes les images ---
-        // Filtrer les fichiers dans manhwaImageFiles pour s'assurer que seuls les éléments uniques sont traités
-        // La liste manhwaImageFiles est déjà ordonnée par le drag-and-drop.
         const imageLoadPromises = manhwaImageFiles.map(file => {
             return new Promise((resolve) => {
                 const img = new Image();
                 img.onload = () => {
-                    img._objectURL = img.src; // Stocke l'URL de l'objet pour la révocation
+                    img._objectURL = img.src;
                     resolve(img);
                 };
                 img.onerror = () => {
                     console.error("Erreur de chargement de l'image:", file.name);
-                    resolve(null); // Resolve with null to indicate failure
+                    resolve(null);
                 };
                 img.src = URL.createObjectURL(file);
             });
         });
 
-        // Attendre que toutes les promesses de chargement soient résolues (succès ou échec)
         const loadedResults = await Promise.all(imageLoadPromises);
 
         let loadedCount = 0;
@@ -678,8 +654,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 allLoadedImages.push(img);
             }
             loadedCount++;
-            // Mettre à jour la barre de chargement en fonction du nombre total d'images SÉLECTIONNÉES
-            const percent = (loadedCount / manhwaImageFiles.length) * 100; // Utilisez manhwaImageFiles.length car c'est le nombre de fichiers que nous avons tenté de charger
+            const percent = (loadedCount / manhwaImageFiles.length) * 100;
             manhwaLoadingBar.style.width = `${percent.toFixed(2)}%`;
             manhwaZipLoadingMessage.textContent = `Chargement des images : ${loadedCount}/${manhwaImageFiles.length} (${percent.toFixed(0)}%)`;
         }
@@ -859,15 +834,12 @@ document.addEventListener('DOMContentLoaded', () => {
         manhwaZipLoadingMessage.classList.add('hidden');
         manhwaLoadingBar.style.width = '0%';
     }
-    // Activation de l'écouteur du bouton Manhwa
     mergeManhwaButton.addEventListener('click', mergeManhwaImages);
 
-    // Initialisation: affiche la section "Merge Vinted" par défaut au chargement
+    // Initialisation
     showSection(vintedMergerSection);
-    updateMergeButtonState(); // S'assure que l'état initial du bouton Vinted est correct
+    updateMergeButtonState();
 
-    // Initialisation de l'état des boutons Manhwa au chargement
-    // Simule un clic sur le bouton Vertical pour définir l'état initial visuel et la variable
     orientationVerticalButton.click();
-    updateManhwaMergeButtonState(); // S'assure que le bouton de fusion Manhwa est désactivé si aucune image n'est sélectionnée
+    updateManhwaMergeButtonState();
 });
