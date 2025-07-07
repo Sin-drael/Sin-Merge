@@ -1,133 +1,183 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image Merger Tool</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sin-Merge</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        // Votre nouvelle couleur d'en-tête personnalisée
+                        'header-green': '#007782', // Définit votre vert #007782
+                        // NOUVEAU : Couleurs pour la barre latérale (inspirées de votre ancien site avec Tailwind)
+                        'sidebar-bg': '#2d3748', // Fond gris foncé pour la sidebar
+                        'sidebar-link-hover': '#4a5568', // Couleur de fond des liens au survol
+                    },
+                }
+            }
+        }
+    </script>
+
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/png" href="images/icon.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
-<body class="bg-gray-100 flex h-screen">
+<body class="font-sans bg-gray-100 text-gray-900 min-h-screen flex flex-col">
 
-    <aside class="w-64 bg-sidebar-bg text-white shadow-lg flex flex-col">
-        <div class="p-6 text-2xl font-semibold text-center border-b border-gray-700">
-            Image Merger
-        </div>
-        <nav class="flex-grow p-4 space-y-2">
-            <button id="navVintedMerge" class="w-full text-left px-4 py-2 rounded-md transition-colors duration-200 bg-blue-600 text-white">
-                Fusion Vinted
-            </button>
-            <button id="navManhwaFusion" class="w-full text-left px-4 py-2 rounded-md transition-colors duration-200 hover:bg-sidebar-link-hover">
-                Fusion Manhwa
-            </button>
-        </nav>
-        <div class="p-4 text-sm text-gray-400 border-t border-gray-700">
-            <p>&copy; 2024 Your Name</p>
-        </div>
-    </aside>
+    <header class="bg-header-green p-4 shadow-md flex flex-col items-center">
+        <div class="header-logo-group flex items-center justify-center gap-4">
+            <img src="images/dragon_logo.png" alt="Dragon Logo Left" class="site-logo dragon-logo left-dragon">
+            <img src="images/test_sinergy_title.png" alt="Sinergy Title Logo" class="site-logo main-title-logo">
+            <img src="images/dragon_logo.png" alt="Dragon Logo Right" class="site-logo dragon-logo right-dragon">
+        </div>
+    </header>
 
-    <main class="flex-1 p-8 overflow-y-auto">
+    <div class="flex flex-1">
+        <aside class="w-64 bg-sidebar-bg text-white shadow-lg flex flex-col p-4">
+            <nav class="flex-1 mt-4">
+                <ul>
+                    <li class="mb-2">
+                        <button id="navVintedMerge" class="flex items-center w-full p-3 rounded-lg text-left hover:bg-sidebar-link-hover transition-colors duration-200">
+                            <i class="fas fa-magic mr-3"></i> <span>Merge Vinted</span>
+                        </button>
+                    </li>
+                    <li class="mb-2">
+                        <button id="navManhwaFusion" class="flex items-center w-full p-3 rounded-lg text-left hover:bg-sidebar-link-hover transition-colors duration-200">
+                            <i class="fas fa-book-open mr-3"></i> <span>Fusion Manhwa</span>
+                        </button>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
 
-        <section id="vintedMergerSection" class="bg-white p-6 rounded-lg shadow-md mb-8">
-            <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">Fusion d'Images Vinted</h2>
+        <div class="flex-1 flex flex-col">
+            <main class="container mx-auto my-8 p-6 flex-1">
+                <section id="vintedMergerSection" class="bg-white rounded-lg shadow-lg p-6">
+                    <h2 class="text-4xl font-extrabold text-blue-700 mb-4">Fusionnez vos images PNG !</h2>
+                    <p class="text-lg leading-relaxed text-gray-700 mb-6">
+                        Importez un calque PNG avec des transparences, puis sélectionnez plusieurs images à placer en dessous.
+                        Cliquez sur "Fusionner" pour générer les images combinées.
+                    </p>
 
-            <div class="mb-6 p-4 border border-dashed border-gray-300 rounded-md text-center bg-gray-50">
-                <label class="block text-lg font-medium text-gray-700 mb-3">Sélectionnez le calque principal (PNG transparent)</label>
-                <input type="file" id="overlayInput" accept="image/png" class="hidden">
-                <button id="selectOverlayButton" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200">
-                    Choisir un fichier PNG
-                </button>
-                <p id="overlayFileName" class="mt-3 text-sm text-gray-500">Aucun fichier sélectionné.</p>
-                <div id="overlayPreview" class="mt-4 flex justify-center items-center h-32 bg-gray-200 rounded-md overflow-hidden">
-                    <span class="text-gray-400">Aperçu du calque</span>
-                </div>
-            </div>
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-xl font-semibold text-gray-800 mb-2">
+                                1. Sélectionnez votre calque principal (PNG transparent) :
+                            </label>
+                            <input type="file" id="overlayInput" accept="image/png" class="hidden">
+                            <button id="selectOverlayButton" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full text-sm transition-colors duration-200 cursor-pointer">
+                                Choisir un fichier...
+                            </button>
+                            <span id="overlayFileName" class="ml-3 text-gray-600">Aucun fichier sélectionné.</span>
 
-            <div class="mb-6 p-4 border border-dashed border-gray-300 rounded-md text-center bg-gray-50">
-                <label class="block text-lg font-medium text-gray-700 mb-3">Sélectionnez les images de fond (JPG, PNG)</label>
-                <input type="file" id="backgroundsInput" accept="image/*" multiple class="hidden">
-                <button id="selectBackgroundsButton" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200">
-                    Choisir des fichiers d'images
-                </button>
-                <p id="backgroundsFileNames" class="mt-3 text-sm text-gray-500">Aucun fichier sélectionné.</p>
-                <div id="backgroundsPreview" class="mt-4 flex flex-wrap justify-center gap-2 p-2 bg-gray-200 rounded-md min-h-32 overflow-y-auto max-h-64">
-                    <span class="text-gray-400">Aperçu des fonds</span>
-                </div>
-            </div>
+                            <div id="overlayPreview" class="mt-4 flex justify-center items-center h-48 border border-gray-300 rounded-md bg-gray-50 overflow-hidden">
+                                <span class="text-gray-400">Aperçu du calque</span>
+                            </div>
+                        </div>
 
-            <div class="text-center mb-6">
-                <button id="mergeButton" class="bg-green-400 text-white font-bold py-3 px-8 rounded-full text-xl shadow-lg transition-colors duration-200 cursor-not-allowed" disabled>
-                    Fusionner les Images
-                </button>
-            </div>
+                        <div>
+                            <label class="block text-xl font-semibold text-gray-800 mb-2">
+                                2. Sélectionnez vos images de fond (plusieurs possibles) :
+                            </label>
+                            <input type="file" id="backgroundsInput" accept="image/*" multiple class="hidden">
+                            <button id="selectBackgroundsButton" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full text-sm transition-colors duration-200 cursor-pointer">
+                                Choisir des fichiers...
+                            </button>
+                            <span id="backgroundsFileNames" class="ml-3 text-gray-600">Aucun fichier sélectionné.</span>
 
-            <div id="statusMessage" class="text-center text-lg font-semibold mt-4"></div>
+                            <div id="backgroundsPreview" class="mt-4 flex flex-wrap gap-4 justify-center">
+                                <span class="text-gray-400">Aperçu des fonds</span>
+                            </div>
+                        </div>
 
-            <div id="loadingBarContainer" class="w-full bg-gray-200 rounded-full h-4 mt-4 hidden">
-                <div id="loadingBar" class="bg-blue-500 h-4 rounded-full" style="width: 0%;"></div>
-            </div>
-            <p id="zipLoadingMessage" class="text-center text-sm text-gray-600 mt-2 hidden">Préparation du fichier ZIP...</p>
+                        <div class="text-center pt-4">
+                            <button id="mergeButton" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg transition-colors duration-200" disabled>
+                                Fusionner mes images
+                            </button>
+                            <div id="statusMessage" class="mt-4 text-gray-600"></div>
+                            <div id="downloadLinks" class="mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
 
+                            <div class="text-center mt-6">
+                                <button id="downloadAllButton" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg transition-colors duration-200 hidden">
+                                    Télécharger tout (Zip)
+                                </button>
+                                <div id="loadingBarContainer" class="hidden mt-4 w-full bg-gray-200 rounded-full h-4">
+                                    <div id="loadingBar" class="bg-blue-500 h-4 rounded-full transition-all duration-500 ease-out" style="width: 0%;"></div>
+                                </div>
+                                <p id="zipLoadingMessage" class="hidden mt-2 text-blue-600 text-sm">Génération du fichier ZIP en cours...</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
 
-            <div id="downloadLinks" class="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                </div>
-            <div class="text-center mt-6">
-                <button id="downloadAllButton" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg transition-colors duration-200 hidden">
-                    Télécharger tout (Zip)
-                </button>
-            </div>
-        </section>
+                <section id="manhwaMergerSection" class="bg-white rounded-lg shadow-lg p-6 hidden">
+                    <h2 class="text-4xl font-extrabold text-blue-700 mb-4">Fusion d'images pour Manhwa</h2>
+                    <p class="text-lg leading-relaxed text-gray-700 mb-6">
+                        Sélectionnez plusieurs images et choisissez si vous souhaitez les fusionner horizontalement ou verticalement.
+                    </p>
 
-        <section id="manhwaMergerSection" class="bg-white p-6 rounded-lg shadow-md hidden">
-            <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">Fusion d'Images Manhwa (Vertical/Horizontal)</h2>
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-xl font-semibold text-gray-800 mb-2">
+                                1. Sélectionnez vos images de Manhwa (plusieurs possibles) :
+                            </label>
+                            <input type="file" id="manhwaImagesInput" accept="image/*" multiple class="hidden">
+                            <button id="selectManhwaImagesButton" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-full text-sm transition-colors duration-200 cursor-pointer">
+                                Choisir des fichiers...
+                            </button>
+                            <span id="manhwaImagesFileNames" class="ml-3 text-gray-600">Aucun fichier sélectionné.</span>
 
-            <div class="mb-6 p-4 border border-dashed border-gray-300 rounded-md text-center bg-gray-50">
-                <label class="block text-lg font-medium text-gray-700 mb-3">Sélectionnez les images du Manhwa (JPG, PNG)</label>
-                <input type="file" id="manhwaImagesInput" accept="image/*" multiple class="hidden">
-                <button id="selectManhwaImagesButton" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-md transition-colors duration-200">
-                    Choisir des fichiers d'images
-                </button>
-                <p id="manhwaImagesFileNames" class="mt-3 text-sm text-gray-500">Aucun fichier sélectionné.</p>
-                <div id="manhwaImagesPreview" class="mt-4 flex flex-wrap justify-center gap-2 p-2 bg-gray-200 rounded-md min-h-32 overflow-y-auto max-h-64">
-                    <span class="text-gray-400">Aperçu des images</span>
-                </div>
-            </div>
+                            <div id="manhwaImagesPreview" class="mt-4 flex flex-wrap gap-4 justify-center">
+                                <span class="text-gray-400">Aperçu des images</span>
+                            </div>
+                        </div>
 
-            <div class="mb-6 text-center">
-                <span class="block text-lg font-medium text-gray-700 mb-3">Orientation de la fusion:</span>
-                <div class="inline-flex rounded-md shadow-sm" role="group">
-                    <button type="button" id="orientationVertical" class="py-2 px-4 text-sm font-medium text-gray-900 bg-white rounded-l-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-2 focus:ring-blue-700 focus:text-blue-700">
-                        Verticale
-                    </button>
-                    <button type="button" id="orientationHorizontal" class="py-2 px-4 text-sm font-medium text-gray-900 bg-white rounded-r-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-2 focus:ring-blue-700 focus:text-blue-700">
-                        Horizontale
-                    </button>
-                </div>
-            </div>
+                        <div>
+                            <label class="block text-xl font-semibold text-gray-800 mb-2">
+                                2. Choisissez l'orientation de la fusion :
+                            </label>
+                            <div class="flex items-center space-x-4 mt-2">
+                                <button id="orientationHorizontal" class="px-5 py-2 rounded-full text-sm font-semibold border border-blue-500 text-blue-500 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors duration-200" data-orientation="horizontal">
+                                    Horizontal
+                                </button>
+                                <button id="orientationVertical" class="px-5 py-2 rounded-full text-sm font-semibold border border-gray-300 text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-opacity-50 transition-colors duration-200" data-orientation="vertical">
+                                    Vertical
+                                </button>
+                            </div>
+                        </div>
 
-            <div class="text-center mb-6 flex justify-center space-x-4">
-                <button id="mergeManhwaButton" class="bg-green-400 text-white font-bold py-3 px-8 rounded-full text-xl shadow-lg transition-colors duration-200 cursor-not-allowed" disabled>
-                    Fusionner le Manhwa
-                </button>
-                <button id="resetManhwaButton" class="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-8 rounded-full text-xl shadow-lg transition-colors duration-200">
-                    Réinitialiser
-                </button>
-            </div>
+                        <div class="text-center pt-4">
+                            <button id="mergeManhwaButton" class="bg-green-400 cursor-not-allowed text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg transition-colors duration-200">
+                                Fusionner
+                            </button>
+                            <button id="resetManhwaButton" class="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-8 rounded-full text-lg shadow-lg transition-colors duration-200 ml-4">
+                                Reset
+                            </button>
+                            <div id="manhwaStatusMessage" class="mt-4 text-gray-600"></div>
+                            <div id="manhwaDownloadLink" class="mt-4"></div>
 
-            <div id="manhwaStatusMessage" class="text-center text-lg font-semibold mt-4"></div>
+                            <div id="manhwaLoadingBarContainer" class="hidden mt-4 w-full bg-gray-200 rounded-full h-4">
+                                <div id="manhwaLoadingBar" class="bg-blue-500 h-4 rounded-full transition-all duration-500 ease-out" style="width: 0%;"></div>
+                            </div>
+                            <p id="manhwaZipLoadingMessage" class="hidden mt-2 text-blue-600 text-sm">Génération du fichier ZIP en cours...</p>
+                        </div>
+                    </div>
+                </section>
 
-            <div id="manhwaLoadingBarContainer" class="w-full bg-gray-200 rounded-full h-4 mt-4 hidden">
-                <div id="manhwaLoadingBar" class="bg-blue-500 h-4 rounded-full" style="width: 0%;"></div>
-            </div>
-            <p id="manhwaZipLoadingMessage" class="text-center text-sm text-gray-600 mt-2 hidden">Préparation du fichier ZIP...</p>
+            </main>
 
-            <div id="manhwaDownloadLink" class="mt-6 text-center">
-                </div>
-        </section>
-
-    </main>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
-    <script src="script.js"></script>
+            <footer class="bg-gray-800 text-white p-4 mt-8 text-center">
+                <div class="container mx-auto">
+                    <p>&copy; 2025 Mon Super Site. Tous droits réservés.</p>
+                </div>
+            </footer>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
