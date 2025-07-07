@@ -1,41 +1,90 @@
 /* style.css */
 
-header {
-    background-color: #007782 !important; /* Votre vert hexadécimal, avec !important pour forcer */
+/* Réinitialisation de base pour s'assurer que le body colle au haut de la page */
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%; /* Important pour que min-h-screen fonctionne correctement sur main */
+    overflow-x: hidden; /* Empêche le défilement horizontal indésirable */
 }
 
-/* Règles pour le groupe de logos dans l'en-tête */
-/* ... (le reste de votre CSS existant pour les logos) ... */
+/* Styles pour l'en-tête si vous voulez forcer une couleur ou d'autres propriétés */
+header {
+    /* bg-gradient-to-r from-blue-700 to-green-700 géré par Tailwind directement dans l'HTML */
+    /* La couleur de fond spécifique que vous aviez pourrait être redondante si le gradient est appliqué */
+    /* background-color: #007782 !important; */
+}
+
+/* Styles génériques pour les logos, appliqués via classes dans l'HTML */
+/* Pas besoin de les redéfinir ici si Tailwind gère les tailles via h-12 w-12 */
+/*
 .site-logo {
     height: auto;
     display: block;
     filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.4));
 }
+*/
 
 /* Styles spécifiques pour les logos de dragon */
+/* Géré par Tailwind (h-12 w-12) et transform -scale-x-100 pour le second dragon */
+/* Si vous aviez une taille max-width spécifique, vous pouvez la remettre ici */
+/*
 .dragon-logo {
     max-width: 70px;
 }
+*/
 
+/*
 .right-dragon {
-    transform: scaleX(-1); /* Retourne l'image horizontalement */
+    transform: scaleX(-1);
 }
+*/
 
-/* Styles spécifiques pour le logo du titre central */
+/* Styles spécifiques pour le logo du titre central (SIN-MERGE) */
+/* Géré par les classes de texte Tailwind (text-5xl font-extrabold tracking-tight) */
+/*
 .main-title-logo {
     max-width: 250px;
 }
+*/
 
-/* Media query pour le responsive, comme dans votre ancien CSS */
+/* Media query pour le responsive, si vous avez des styles non-Tailwind à appliquer */
+/* Les classes Tailwind (md:flex-row, md:w-64 etc.) gèrent déjà beaucoup de responsive */
+/* Vous pouvez ajouter ici des overrides si nécessaire */
+/*
 @media (max-width: 768px) {
     .header-logo-group {
-        flex-direction: column; /* Les logos s'empilent sur les petits écrans */
-        gap: 5px; /* Réduit l'espace entre les logos */
+        flex-direction: column;
+        gap: 5px;
     }
     .main-title-logo {
-        height: 60px; /* Réduit la taille du titre sur mobile */
+        height: 60px;
     }
     .dragon-logo {
-        height: 40px; /* Réduit la taille des dragons sur mobile */
+        height: 40px;
     }
+}
+*/
+
+/* Voici quelques styles que vous pourriez ajouter si vous avez besoin d'ajustements spécifiques
+   que Tailwind ne gère pas directement ou si vous avez des overrides à faire.
+   Pour l'instant, la mise en page repose majoritairement sur les classes Tailwind dans l'HTML. */
+
+/* Assurez-vous que les images de prévisualisation dans les aperçus ne dépassent pas */
+#overlayPreview img, #backgroundsPreview img, #manhwaImagesPreview img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain; /* Ou cover, selon l'effet désiré */
+}
+
+/* Style spécifique pour le conteneur des miniatures Manhwa pour le drag-and-drop */
+/* C'est là que l'indicateur de drop sera appliqué */
+.manhwa-thumbnail-wrapper .relative {
+    transition: border-color 0.2s ease-in-out; /* Ajoute une transition pour l'indicateur */
+}
+
+/* Cacher l'input file par défaut, mais le bouton le déclenchera */
+input[type="file"] {
+    display: none;
 }
