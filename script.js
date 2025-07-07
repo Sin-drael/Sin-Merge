@@ -383,18 +383,43 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     manhwaImageFiles = Array.from(uniqueFiles.values());
-    manhwaImageFiles.sort((a, b) => {
-        const numA = parseInt(a.name.match(/\d+/), 10); // Extrait le premier nombre du nom de fichier A
-        const numB = parseInt(b.name.match(/\d+/), 10); // Extrait le premier nombre du nom de fichier B
 
-        // Si les deux noms contiennent des nombres et sont valides, on les compare numériquement
-        if (!isNaN(numA) && !isNaN(numB)) {
-            return numA - numB;
+    // --- MODIFICATION ICI : Tri alphanumérique naturel avancé ---
+    manhwaImageFiles.sort((a, b) => {
+        // Fonction utilitaire pour extraire les parties (textes et nombres)
+        const getParts = (s) => {
+            return s.split(/(\d+)/).filter(Boolean).map(part => {
+                const num = parseInt(part, 10);
+                return isNaN(num) ? part : num;
+            });
+        };
+
+        const partsA = getParts(a.name);
+        const partsB = getParts(b.name);
+
+        for (let i = 0; i < Math.min(partsA.length, partsB.length); i++) {
+            const partA = partsA[i];
+            const partB = partsB[i];
+
+            if (typeof partA === 'number' && typeof partB === 'number') {
+                // Si ce sont des nombres, comparez-les numériquement
+                if (partA !== partB) {
+                    return partA - partB;
+                }
+            } else {
+                // Sinon, comparez-les comme des chaînes de caractères
+                const comparison = String(partA).localeCompare(String(partB));
+                if (comparison !== 0) {
+                    return comparison;
+                }
+            }
         }
 
-        // Sinon (si pas de nombres ou nombres invalides), on revient à un tri alphabétique standard
-        return a.name.localeCompare(b.name);
+        // Si toutes les parties sont égales jusqu'à la longueur la plus courte,
+        // celui qui a plus de parties restantes est considéré comme "plus grand".
+        return partsA.length - partsB.length;
     });
+    // --- FIN DE LA MODIFICATION ---
 
     manhwaImagesPreview.innerHTML = ''; // Nettoie l'aperçu existant
 
@@ -405,17 +430,13 @@ document.addEventListener('DOMContentLoaded', () => {
             manhwaImagesFileNames.textContent = `${manhwaImageFiles.length} fichiers sélectionnés.`;
         }
 
-        // --- DÉPLACEMENT DE LA CRÉATION DU CONTENEUR DE COLONNES ---
-        // On crée un conteneur Grid pour les colonnes
         const gridContainer = document.createElement('div');
-        // Tu peux ajuster le nombre de colonnes ici: grid-cols-2 pour 2, grid-cols-3 pour 3, etc.
-        // J'ajoute des variations pour différentes tailles d'écran (mobile, tablette, desktop)
-        gridContainer.classList.add('grid', 'grid-cols-1', 'sm:grid-cols-2', 'lg:grid-cols-3', 'gap-4'); // 1 colonne par défaut, 2 sur sm, 3 sur lg
+        gridContainer.classList.add('grid', 'grid-cols-1', 'sm:grid-cols-2', 'lg:grid-cols-3', 'gap-4');
 
         manhwaImageFiles.forEach(file => {
             const reader = new FileReader();
             reader.onload = (e) => {
-                const li = document.createElement('li'); // On garde le li pour la structure interne
+                const li = document.createElement('li');
                 li.classList.add('flex', 'items-center', 'space-x-4', 'p-2', 'bg-gray-50', 'rounded-md', 'shadow-sm', 'hover:bg-gray-100', 'transition-colors', 'duration-150');
 
                 const img = document.createElement('img');
@@ -430,10 +451,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 li.appendChild(img);
                 li.appendChild(fileNameSpan);
 
-                // --- AJOUT AU CONTENEUR GRID AU LIEU DU UL DIRECTEMENT ---
                 gridContainer.appendChild(li);
 
-                // Une fois que tous les éléments sont ajoutés au gridContainer
                 if (gridContainer.children.length === manhwaImageFiles.length) {
                     manhwaImagesPreview.appendChild(gridContainer);
                 }
