@@ -386,40 +386,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     manhwaImageFiles = Array.from(uniqueFiles.values());
-
-    // --- NOUVEAU BLOC DE TRI NUMÉRIQUE AVANCÉ ET ROBUSTE ---
-    manhwaImageFiles.sort((a, b) => {
-        // Fonction utilitaire pour extraire les nombres d'une chaîne
-        const extractNumbers = (str) => {
-            // Trouve toutes les séquences de chiffres dans la chaîne
-            const matches = str.match(/\d+/g);
-            // Convertit les correspondances en nombres, retourne un tableau vide si aucune
-            return matches ? matches.map(Number) : [];
-        };
-
-        const numbersA = extractNumbers(a.name);
-        const numbersB = extractNumbers(b.name);
-
-        // Compare les nombres extraits séquentiellement
-        for (let i = 0; i < Math.min(numbersA.length, numbersB.length); i++) {
-            if (numbersA[i] !== numbersB[i]) {
-                return numbersA[i] - numbersB[i]; // Compare numériquement
-            }
-        }
-
-        // Si les nombres extraits sont identiques jusqu'à la fin de la séquence la plus courte,
-        // on compare les longueurs des séquences de nombres.
-        if (numbersA.length !== numbersB.length) {
-            return numbersA.length - numbersB.length;
-        }
-
-        // Si toutes les séquences numériques sont identiques, on fallback sur un tri alphabétique
-        // pour gérer les parties non numériques ou les noms de fichiers complexes.
-        return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
-    });
-    // --- FIN DU BLOC DE TRI ---
-
-
+    manhwaImageFiles.sort((a, b) => a.name.localeCompare(b.name));
     manhwaImagesPreview.innerHTML = ''; // Nettoie l'aperçu existant
 
     if (manhwaImageFiles.length > 0) {
