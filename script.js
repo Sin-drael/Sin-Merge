@@ -383,7 +383,18 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     manhwaImageFiles = Array.from(uniqueFiles.values());
-    manhwaImageFiles.sort((a, b) => a.name.localeCompare(b.name));
+    manhwaImageFiles.sort((a, b) => {
+        const numA = parseInt(a.name.match(/\d+/), 10); // Extrait le premier nombre du nom de fichier A
+        const numB = parseInt(b.name.match(/\d+/), 10); // Extrait le premier nombre du nom de fichier B
+
+        // Si les deux noms contiennent des nombres et sont valides, on les compare numériquement
+        if (!isNaN(numA) && !isNaN(numB)) {
+            return numA - numB;
+        }
+
+        // Sinon (si pas de nombres ou nombres invalides), on revient à un tri alphabétique standard
+        return a.name.localeCompare(b.name);
+    });
 
     manhwaImagesPreview.innerHTML = ''; // Nettoie l'aperçu existant
 
