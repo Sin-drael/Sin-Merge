@@ -46,6 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let manhwaImageFiles = [];
     let mergeOrientation = 'vertical'; // Par défaut, la fusion est verticale
     let draggedElement = null; // Élément en cours de glissement pour le drag-and-drop
+    let dropTargetIndicator = null; // Pour suivre l'élément où l'indicateur est affiché
 
     // NOUVEAU : Taille maximale des images à fusionner par partie
     const MAX_IMAGES_PER_CHUNK = 50; // Ajustez ce nombre si nécessaire après des tests
@@ -372,6 +373,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     manhwaImagesInput.addEventListener('change', async (event) => {
         const newFiles = Array.from(event.target.files).filter(file => file.type.startsWith('image/'));
+        // Utiliser une Map pour gérer l'unicité des fichiers par une clé combinée
         const uniqueFiles = new Map();
         manhwaImageFiles.forEach(file => {
             uniqueFiles.set(`${file.name}-${file.size}-${file.lastModified}`, file);
@@ -395,15 +397,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 const imgContainer = document.createElement('div');
                 imgContainer.classList.add(
                     'relative', 'w-24', 'h-24', 'object-cover', 'rounded-md', 'shadow-sm',
-                    'overflow-hidden', 'cursor-grab', 'manhwa-thumbnail' // Add manhwa-thumbnail class for identification
+                    'overflow-hidden', 'cursor-grab', 'manhwa-thumbnail', 'flex-shrink-0' // Add flex-shrink-0
                 );
                 imgContainer.draggable = true; // Make it draggable
-                imgContainer.dataset.fileName = file.name; // Store original file name
-                imgContainer.dataset.fileSize = file.size; // Store original file size
-                imgContainer.dataset.fileLastModified = file.lastModified; // Store original file last modified
+                // Stocker l'index initial de l'image dans le DOM et le tableau
+                imgContainer.dataset.originalIndex = manhwaImageFiles.indexOf(file);
+                // Utiliser une clé unique pour le dataset pour l'identification lors du drag/drop
+                imgContainer.dataset.fileKey = `${file.name}-${file.size}-${file.lastModified}`;
 
                 const img = document.createElement('img');
-                img.classList.add('w-full', 'h-full', 'object-cover'); // Fill container
+                img.classList.add('w-full', 'h-full', 'object-cover', 'pointer-events-none'); // pointer-events-none pour éviter d'interférer avec le drag sur l'image elle-même
                 imgContainer.appendChild(img);
                 manhwaImagesPreview.appendChild(imgContainer);
 
@@ -431,44 +434,54 @@ document.addEventListener('DOMContentLoaded', () => {
             draggedElement = e.target;
             // Add a class to make it visually distinct while dragging (e.g., opacity)
             draggedElement.classList.add('opacity-50', 'border-2', 'border-blue-500');
-            // Store data for transfer, though not strictly needed for internal reordering in this way
             e.dataTransfer.effectAllowed = 'move';
-            // Use dataset to store the original index or identify the file
-            e.dataTransfer.setData('text/plain', `${draggedElement.dataset.fileName}-${draggedElement.dataset.fileSize}-${draggedElement.dataset.fileLastModified}`);
+            // Store the unique key for identifying the dragged file
+            e.dataTransfer.setData('text/plain', draggedElement.dataset.fileKey);
         }
     });
 
     manhwaImagesPreview.addEventListener('dragover', (e) => {
         e.preventDefault(); // Permet le drop
-        if (draggedElement && e.target.classList.contains('manhwa-thumbnail') && e.target !== draggedElement) {
+        if (draggedElement && e.target.closest('.manhwa-thumbnail') && e.target.closest('.manhwa-thumbnail') !== draggedElement) {
+            const targetThumbnail = e.target.closest('.manhwa-thumbnail');
+            
             // Remove existing indicators
-            document.querySelectorAll('.manhwa-thumbnail').forEach(thumb => {
-                thumb.classList.remove('border-l-4', 'border-r-4', 'border-blue-500');
-            });
+            if (dropTargetIndicator && dropTargetIndicator !== targetThumbnail) {
+                dropTargetIndicator.classList.remove('border-l-4', 'border-r-4', 'border-blue-500');
+            }
+            // Also remove from current target if re-evaluating position
+            targetThumbnail.classList.remove('border-l-4', 'border-r-4', 'border-blue-500');
 
             // Determine if dragging over left or right half to show indicator
-            const targetRect = e.target.getBoundingClientRect();
+            const targetRect = targetThumbnail.getBoundingClientRect();
             const mouseX = e.clientX;
             const center = targetRect.left + targetRect.width / 2;
 
             if (mouseX < center) {
-                e.target.classList.add('border-l-4', 'border-blue-500');
+                targetThumbnail.classList.add('border-l-4', 'border-blue-500');
             } else {
-                e.target.classList.add('border-r-4', 'border-blue-500');
+                targetThumbnail.classList.add('border-r-4', 'border-blue-500');
             }
+            dropTargetIndicator = targetThumbnail; // Update the indicator reference
             e.dataTransfer.dropEffect = 'move';
-        } else if (draggedElement && e.target === manhwaImagesPreview && manhwaImagesPreview.children.length === 1 && manhwaImagesPreview.children[0].tagName === 'SPAN') {
-            // If dragging over an empty preview area
+        } else if (draggedElement && e.target === manhwaImagesPreview && manhwaImagesPreview.children.length > 0 && manhwaImagesPreview.children[0].tagName === 'SPAN') {
+            // If dragging over an empty preview area (initial state with "Aperçu des images")
+            // This might not be strictly needed if we ensure there's always at least one thumbnail or a dedicated drop zone
             manhwaImagesPreview.classList.add('border-2', 'border-blue-500', 'border-dashed');
             e.dataTransfer.dropEffect = 'move';
+        } else if (draggedElement && e.target === manhwaImagesPreview && manhwaImagesPreview.children.length === 0) {
+             // If dropping into an empty area after all images were removed (e.g. after reset and then dragging an image from outside)
+             manhwaImagesPreview.classList.add('border-2', 'border-blue-500', 'border-dashed');
+             e.dataTransfer.dropEffect = 'move';
         }
     });
 
     manhwaImagesPreview.addEventListener('dragleave', (e) => {
         // Remove all indicators when leaving any thumbnail or the preview area
-        document.querySelectorAll('.manhwa-thumbnail').forEach(thumb => {
-            thumb.classList.remove('border-l-4', 'border-r-4', 'border-blue-500');
-        });
+        if (dropTargetIndicator) {
+            dropTargetIndicator.classList.remove('border-l-4', 'border-r-4', 'border-blue-500');
+            dropTargetIndicator = null;
+        }
         manhwaImagesPreview.classList.remove('border-2', 'border-blue-500', 'border-dashed');
     });
 
@@ -476,51 +489,53 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault(); // Empêche l'ouverture du fichier dans le navigateur
         if (draggedElement) {
             // Remove all indicators
-            document.querySelectorAll('.manhwa-thumbnail').forEach(thumb => {
-                thumb.classList.remove('border-l-4', 'border-r-4', 'border-blue-500');
-            });
+            if (dropTargetIndicator) {
+                dropTargetIndicator.classList.remove('border-l-4', 'border-r-4', 'border-blue-500');
+                dropTargetIndicator = null;
+            }
             manhwaImagesPreview.classList.remove('border-2', 'border-blue-500', 'border-dashed');
 
-            let targetElement = e.target;
-            // Ensure targetElement is the actual thumbnail container or a descendant
-            while (targetElement && !targetElement.classList.contains('manhwa-thumbnail') && targetElement !== manhwaImagesPreview) {
-                targetElement = targetElement.parentElement;
+            let targetElement = e.target.closest('.manhwa-thumbnail'); // Get the closest thumbnail container
+            
+            // Handle drop into an empty preview area
+            if (!targetElement && manhwaImagesPreview.children.length === 0) {
+                manhwaImagesPreview.appendChild(draggedElement);
+                // If dropping into empty, the dragged element will be the only one, array is fine.
+                // No need to reorder manhwaImageFiles here unless it was from an external source,
+                // but for internal reorder, it means the item was probably dragged and dropped onto itself or outside.
+                // We should re-sync the array based on DOM order.
+                manhwaImageFiles = Array.from(manhwaImagesPreview.children).map(thumb => {
+                    const key = thumb.dataset.fileKey;
+                    return manhwaImageFiles.find(file => `${file.name}-${file.size}-${file.lastModified}` === key);
+                }).filter(Boolean); // Filter out any null/undefined if not found
+                return;
             }
 
-            if (targetElement && targetElement.classList.contains('manhwa-thumbnail') && targetElement !== draggedElement) {
-                const thumbnails = Array.from(manhwaImagesPreview.children);
-                const draggedIndex = thumbnails.indexOf(draggedElement);
-                let targetIndex = thumbnails.indexOf(targetElement);
+
+            if (targetElement && targetElement !== draggedElement) {
+                const thumbnails = Array.from(manhwaImagesPreview.children).filter(el => el.classList.contains('manhwa-thumbnail'));
+                const draggedIndexDOM = thumbnails.indexOf(draggedElement);
+                let targetIndexDOM = thumbnails.indexOf(targetElement);
 
                 const targetRect = targetElement.getBoundingClientRect();
                 const mouseX = e.clientX;
                 const center = targetRect.left + targetRect.width / 2;
 
-                if (mouseX > center) { // Drop to the right of the target
-                    if (draggedIndex < targetIndex) {
-                        // Moving right and already after target, no need to increment
+                if (mouseX > center) { // Drop to the right of the target thumbnail
+                    if (draggedIndexDOM < targetIndexDOM) {
+                        manhwaImagesPreview.insertBefore(draggedElement, thumbnails[targetIndexDOM + 1]);
                     } else {
-                        targetIndex++; // Insert after the target element
+                        manhwaImagesPreview.insertBefore(draggedElement, thumbnails[targetIndexDOM + 1]);
                     }
+                } else { // Drop to the left of the target thumbnail
+                    manhwaImagesPreview.insertBefore(draggedElement, thumbnails[targetIndexDOM]);
                 }
-                // If mouseX < center, insert before targetIndex (which is default)
-
-                // Reorder DOM elements
-                if (draggedIndex < targetIndex) {
-                    manhwaImagesPreview.insertBefore(draggedElement, thumbnails[targetIndex]);
-                } else {
-                    manhwaImagesPreview.insertBefore(draggedElement, thumbnails[targetIndex]);
-                }
-
-                // Reorder the underlying manhwaImageFiles array
-                const [movedFile] = manhwaImageFiles.splice(draggedIndex, 1);
-                manhwaImageFiles.splice(targetIndex > manhwaImageFiles.length ? manhwaImageFiles.length : targetIndex, 0, movedFile);
-
-            } else if (targetElement === manhwaImagesPreview && manhwaImagesPreview.children.length === 1 && manhwaImagesPreview.children[0].tagName === 'SPAN') {
-                // If dropping into an empty area
-                manhwaImagesPreview.innerHTML = '';
-                manhwaImagesPreview.appendChild(draggedElement);
-                // The array is already correct if it was the only element or just moved back to its origin
+                
+                // Reorder the underlying manhwaImageFiles array based on the new DOM order
+                manhwaImageFiles = Array.from(manhwaImagesPreview.children).map(thumb => {
+                    const key = thumb.dataset.fileKey;
+                    return manhwaImageFiles.find(file => `${file.name}-${file.size}-${file.lastModified}` === key);
+                }).filter(Boolean); // Filter out any null/undefined if not found
             }
         }
     });
@@ -528,11 +543,13 @@ document.addEventListener('DOMContentLoaded', () => {
     manhwaImagesPreview.addEventListener('dragend', () => {
         if (draggedElement) {
             draggedElement.classList.remove('opacity-50', 'border-2', 'border-blue-500');
+            // Ensure no lingering indicators
             document.querySelectorAll('.manhwa-thumbnail').forEach(thumb => {
                 thumb.classList.remove('border-l-4', 'border-r-4', 'border-blue-500');
             });
             manhwaImagesPreview.classList.remove('border-2', 'border-blue-500', 'border-dashed');
             draggedElement = null;
+            dropTargetIndicator = null;
         }
     });
 
@@ -642,7 +659,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const allLoadedImages = [];
 
         // --- Créer une liste de promesses pour charger toutes les images ---
-        const imageLoadPromises = manhwaImageFiles.map(file => {
+        // Filtrer les fichiers dans manhwaImageFiles pour s'assurer que seuls les éléments uniques sont traités
+        const uniqueManhwaFiles = Array.from(new Map(manhwaImageFiles.map(file => [`${file.name}-${file.size}-${file.lastModified}`, file])).values());
+
+        const imageLoadPromises = uniqueManhwaFiles.map(file => {
             return new Promise((resolve) => {
                 const img = new Image();
                 img.onload = () => {
@@ -667,9 +687,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 allLoadedImages.push(img);
             }
             loadedCount++;
-            const percent = (loadedCount / manhwaImageFiles.length) * 100;
+            // Mettre à jour la barre de chargement en fonction du nombre total d'images SÉLECTIONNÉES
+            const percent = (loadedCount / uniqueManhwaFiles.length) * 100;
             manhwaLoadingBar.style.width = `${percent.toFixed(2)}%`;
-            manhwaZipLoadingMessage.textContent = `Chargement des images : ${loadedCount}/${manhwaImageFiles.length} (${percent.toFixed(0)}%)`;
+            manhwaZipLoadingMessage.textContent = `Chargement des images : ${loadedCount}/${uniqueManhwaFiles.length} (${percent.toFixed(0)}%)`;
         }
 
         if (allLoadedImages.length === 0) {
@@ -684,15 +705,13 @@ document.addEventListener('DOMContentLoaded', () => {
         manhwaLoadingBar.style.width = '0%';
         manhwaZipLoadingMessage.textContent = "Fusion des parties...";
 
-        // Déclaration unique de ces variables au bon endroit, AVANT la boucle de traitement des chunks.
         const mergedManhwaBlobs = [];
         let currentImageIndex = 0;
         let partNumber = 1;
-        let currentChunkSize = MAX_IMAGES_PER_CHUNK; // Cette ligne est correcte, elle utilisera la nouvelle valeur.
+        let currentChunkSize = MAX_IMAGES_PER_CHUNK;
 
         while (currentImageIndex < allLoadedImages.length) {
             let success = false;
-            // Boucle interne pour réessayer avec des tailles de chunk réduites
             while (!success && currentChunkSize >= 1) {
                 const chunkImages = allLoadedImages.slice(currentImageIndex, currentImageIndex + currentChunkSize);
 
@@ -701,7 +720,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     break;
                 }
 
-                // Recréer le canvas et le contexte pour chaque tentative de chunk.
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
 
@@ -740,7 +758,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 try {
                     const blob = await new Promise(resolve => {
                         setTimeout(() => {
-                            // Modification : Export en JPEG avec 70% de qualité
                             canvas.toBlob((b) => {
                                 resolve(b);
                             }, 'image/jpeg', 0.7);
@@ -748,7 +765,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     });
 
                     if (blob && blob.size > 0) {
-                        // Modification : Changer l'extension du fichier généré de .png à .jpg
                         const partFileName = `${String(partNumber).padStart(2, '0')}.jpg`;
                         mergedManhwaBlobs.push({ blob: blob, name: partFileName });
                         currentImageIndex += chunkImages.length;
@@ -779,11 +795,8 @@ document.addEventListener('DOMContentLoaded', () => {
             manhwaZipLoadingMessage.textContent = `Fusion des parties : ${currentImageIndex}/${allLoadedImages.length} images traitées (${fusionProgress.toFixed(0)}%)`;
         }
 
-        // --- Reste du code pour gérer le téléchargement du lien ou du ZIP ---
-        // Ces lignes étaient correctement placées à la fin.
-        // --- MODIFICATION MAJEURE ICI : Révoquer toutes les URL d'objet APRES que toutes les fusions sont terminées ---
         allLoadedImages.forEach(img => {
-            if (img._objectURL) { // Vérifie si l'URL a été stockée
+            if (img._objectURL) {
                 URL.revokeObjectURL(img._objectURL);
             }
         });
