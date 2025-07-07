@@ -375,7 +375,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const newFiles = Array.from(event.target.files).filter(file => file.type.startsWith('image/'));
     const uniqueFiles = new Map();
 
-    // Conserver les fichiers existants et ajouter les nouveaux fichiers uniques
     manhwaImageFiles.forEach(file => {
         uniqueFiles.set(`${file.name}-${file.size}-${file.lastModified}`, file);
     });
@@ -384,8 +383,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     manhwaImageFiles = Array.from(uniqueFiles.values());
-
-    // --- NOUVEAU : Tri des fichiers par nom avant l'affichage ---
     manhwaImageFiles.sort((a, b) => a.name.localeCompare(b.name));
 
     manhwaImagesPreview.innerHTML = ''; // Nettoie l'aperçu existant
@@ -397,33 +394,37 @@ document.addEventListener('DOMContentLoaded', () => {
             manhwaImagesFileNames.textContent = `${manhwaImageFiles.length} fichiers sélectionnés.`;
         }
 
-        // --- NOUVEAU : Création de la liste d'images ---
-        const ul = document.createElement('ul');
-        ul.classList.add('space-y-2'); // Espacement entre les éléments de la liste
+        // --- DÉPLACEMENT DE LA CRÉATION DU CONTENEUR DE COLONNES ---
+        // On crée un conteneur Grid pour les colonnes
+        const gridContainer = document.createElement('div');
+        // Tu peux ajuster le nombre de colonnes ici: grid-cols-2 pour 2, grid-cols-3 pour 3, etc.
+        // J'ajoute des variations pour différentes tailles d'écran (mobile, tablette, desktop)
+        gridContainer.classList.add('grid', 'grid-cols-1', 'sm:grid-cols-2', 'lg:grid-cols-3', 'gap-4'); // 1 colonne par défaut, 2 sur sm, 3 sur lg
 
         manhwaImageFiles.forEach(file => {
             const reader = new FileReader();
             reader.onload = (e) => {
-                const li = document.createElement('li');
+                const li = document.createElement('li'); // On garde le li pour la structure interne
                 li.classList.add('flex', 'items-center', 'space-x-4', 'p-2', 'bg-gray-50', 'rounded-md', 'shadow-sm', 'hover:bg-gray-100', 'transition-colors', 'duration-150');
 
                 const img = document.createElement('img');
                 img.src = e.target.result;
-                img.classList.add('w-16', 'h-16', 'object-cover', 'rounded-md', 'flex-shrink-0'); // Miniature plus petite
-                img.title = file.name; // Garde le tooltip au survol
+                img.classList.add('w-16', 'h-16', 'object-cover', 'rounded-md', 'flex-shrink-0');
+                img.title = file.name;
 
                 const fileNameSpan = document.createElement('span');
                 fileNameSpan.textContent = file.name;
-                fileNameSpan.classList.add('text-gray-800', 'font-medium', 'break-all'); // Pour gérer les noms longs
+                fileNameSpan.classList.add('text-gray-800', 'font-medium', 'break-all');
 
                 li.appendChild(img);
                 li.appendChild(fileNameSpan);
-                ul.appendChild(li);
 
-                // Une fois toutes les images chargées et les LI ajoutés, ajoute le UL au preview
-                // Cela évite de recalculer le DOM trop souvent
-                if (ul.children.length === manhwaImageFiles.length) {
-                    manhwaImagesPreview.appendChild(ul);
+                // --- AJOUT AU CONTENEUR GRID AU LIEU DU UL DIRECTEMENT ---
+                gridContainer.appendChild(li);
+
+                // Une fois que tous les éléments sont ajoutés au gridContainer
+                if (gridContainer.children.length === manhwaImageFiles.length) {
+                    manhwaImagesPreview.appendChild(gridContainer);
                 }
             };
             reader.readAsDataURL(file);
@@ -433,7 +434,7 @@ document.addEventListener('DOMContentLoaded', () => {
         manhwaImagesPreview.innerHTML = '<span class="text-gray-400">Aperçu des images</span>';
     }
     updateManhwaMergeButtonState();
-    event.target.value = ''; // Réinitialise l'input file pour permettre la re-sélection des mêmes fichiers
+    event.target.value = '';
 });
 
     // Gestion des boutons d'orientation
