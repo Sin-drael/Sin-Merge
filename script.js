@@ -376,45 +376,50 @@ document.addEventListener('DOMContentLoaded', () => {
     const uniqueFiles = new Map();
 
     manhwaImageFiles.forEach(file => {
-        uniqueFiles.set(`${file.name}-${file.size}-${file.lastModified}`, file);
+        // Conserver le nom original pour l'affichage, mais stocker un nom "triable" si besoin
+        uniqueFiles.set(`${file.originalName || file.name}-${file.size}-${file.lastModified}`, file);
     });
+
     newFiles.forEach(file => {
-        uniqueFiles.set(`${file.name}-${file.size}-${file.lastModified}`, file);
+        // --- NOUVELLE LOGIQUE DE NORMALISATION DU NOM POUR LE TRI ---
+        let processedFileName = file.name;
+        // Regex pour trouver le nom de base du fichier sans l'extension
+        const baseNameMatch = file.name.match(/^(\d+)(\..+)$/); // Capture le nombre et l'extension
+
+        if (baseNameMatch && baseNameMatch[1].length === 1) { // S'il y a un nombre et qu'il est d'un seul chiffre
+            const numberPart = baseNameMatch[1]; // Ex: "2"
+            const extensionPart = baseNameMatch[2]; // Ex: ".jpg"
+            processedFileName = `0${numberPart}${extensionPart}`; // Ex: "02.jpg"
+        }
+        // Pour les noms de fichiers plus complexes (ex: "image_2.jpg"), une regex plus sophistiquée serait nécessaire
+        // Mais pour "nombre.jpg", cette logique est parfaite.
+
+        // Créer une nouvelle 'File' ou un objet similaire avec le nom modifié
+        // Il est important de ne PAS modifier 'file.name' directement sur l'objet File original,
+        // car c'est une propriété en lecture seule.
+        // On va créer un nouvel objet qui contient le fichier original et son nom traité.
+        const fileForProcessing = {
+            originalFile: file, // Garde une référence au fichier original pour le chargement
+            name: processedFileName, // Utilise le nom normalisé pour le tri
+            originalName: file.name, // Garde aussi le nom original si tu veux l'afficher
+            size: file.size,
+            lastModified: file.lastModified,
+            type: file.type
+        };
+        uniqueFiles.set(`${fileForProcessing.name}-${fileForProcessing.size}-${fileForProcessing.lastModified}`, fileForProcessing);
     });
 
     manhwaImageFiles = Array.from(uniqueFiles.values());
-    manhwaImageFiles.sort((a, b) => {
-        const nameA = a.name;
-        const nameB = b.name;
 
-        // Fonction pour extraire le premier nombre d'une chaîne
-        const extractNumber = (str) => {
-            const match = str.match(/\d+/);
-            return match ? parseInt(match[0], 10) : NaN; // Retourne le nombre ou NaN si aucun nombre n'est trouvé
-        };
+    // --- LE TRI DEVIENT UN SIMPLE TRI ALPHABÉTIQUE STANDARD ---
+    manhwaImageFiles.sort((a, b) => a.name.localeCompare(b.name));
+    // --- FIN DE LA MODIFICATION ---
 
-        const numA = extractNumber(nameA);
-        const numB = extractNumber(nameB);
-
-        // Si les deux noms contiennent des nombres valides, on les compare numériquement
-        if (!isNaN(numA) && !isNaN(numB)) {
-            if (numA !== numB) {
-                return numA - numB;
-            }
-            // Si les nombres sont identiques (ex: "image1.jpg" et "image1_bis.jpg"),
-            // on fait un tri alphabétique pour départager.
-            return nameA.localeCompare(nameB, undefined, { sensitivity: 'base' });
-        }
-
-        // Si l'un des noms n'a pas de nombre, ou si l'extraction échoue,
-        // on revient à un tri alphabétique simple.
-        return nameA.localeCompare(nameB, undefined, { sensitivity: 'base' });
-    });
     manhwaImagesPreview.innerHTML = ''; // Nettoie l'aperçu existant
 
     if (manhwaImageFiles.length > 0) {
         if (manhwaImageFiles.length === 1) {
-            manhwaImagesFileNames.textContent = manhwaImageFiles[0].name;
+            manhwaImagesFileNames.textContent = manhwaImageFiles[0].originalName || manhwaImageFiles[0].name;
         } else {
             manhwaImagesFileNames.textContent = `${manhwaImageFiles.length} fichiers sélectionnés.`;
         }
@@ -422,7 +427,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const gridContainer = document.createElement('div');
         gridContainer.classList.add('grid', 'grid-cols-1', 'sm:grid-cols-2', 'lg:grid-cols-3', 'gap-4');
 
-        manhwaImageFiles.forEach(file => {
+        manhwaImageFiles.forEach(fileObject => { // ATTENTION: maintenant 'fileObject' est un objet personnalisé
             const reader = new FileReader();
             reader.onload = (e) => {
                 const li = document.createElement('li');
@@ -431,10 +436,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 const img = document.createElement('img');
                 img.src = e.target.result;
                 img.classList.add('w-16', 'h-16', 'object-cover', 'rounded-md', 'flex-shrink-0');
-                img.title = file.name;
+                // Utilise le nom original pour le tooltip si disponible, sinon le nom traité
+                img.title = fileObject.originalName || fileObject.name;
 
                 const fileNameSpan = document.createElement('span');
-                fileNameSpan.textContent = file.name;
+                // Affiche toujours le nom original à l'utilisateur
+                fileNameSpan.textContent = fileObject.originalName || fileObject.name;
                 fileNameSpan.classList.add('text-gray-800', 'font-medium', 'break-all');
 
                 li.appendChild(img);
@@ -446,7 +453,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     manhwaImagesPreview.appendChild(gridContainer);
                 }
             };
-            reader.readAsDataURL(file);
+            // Très important: FileReader lit le fichier ORIGINAL
+            reader.readAsDataURL(fileObject.originalFile);
         });
     } else {
         manhwaImagesFileNames.textContent = 'Aucun fichier sélectionné.';
